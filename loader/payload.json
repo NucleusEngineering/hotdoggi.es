@@ -1,0 +1,19 @@
+{
+    "message": "hi!",
+    "orders": [
+        {
+            "id": 0,
+            "name": "something cool"
+        },
+        {
+            "id": 1,
+            "name": "another cool thing"
+        }
+    ],
+    "metadata": {
+        "location" : {
+            "latitude": 45.2345432453,
+            "longitude": 9.345456335976
+        }
+    }
+}

@@ -1,0 +1,7 @@
+source "https://rubygems.org"
+
+gem "cloud_events"
+gem "opencensus-stackdriver"
+gem "functions_framework"
+gem "google-cloud-firestore"
+gem "google-cloud-pubsub"
