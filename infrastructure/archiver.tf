@@ -10,12 +10,6 @@ resource "google_service_account_iam_member" "archiver-sa-user" {
   member             = "serviceAccount:${local.project_number}@cloudbuild.gserviceaccount.com"
 }
 
-resource "google_project_iam_member" "archiver-sa-logging" {
-  project = local.project
-  role    = "roles/logging.logWriter"
-  member  = "serviceAccount:${google_service_account.archiver.email}"
-}
-
 resource "google_project_iam_member" "archiver-sa-cloudtrace" {
   project = local.project
   role    = "roles/cloudtrace.agent"
@@ -26,19 +20,6 @@ resource "google_project_iam_member" "archiver-sa-storage" {
   project = local.project
   role    = "roles/storage.objectAdmin"
   member  = "serviceAccount:${google_service_account.archiver.email}"
-}
-
-resource "google_pubsub_subscription" "archiver" {
-  project = local.project
-  name    = "${local.prefix}-archiver-push"
-  topic   = google_pubsub_topic.topic.name
-  filter  = ""
-  push_config {
-    push_endpoint = google_cloud_run_service.archiver.status[0].url
-    oidc_token {
-      service_account_email = google_service_account.pubsub-pusher.email
-    }
-  }
 }
 
 resource "google_cloud_run_service" "archiver" {
@@ -52,11 +33,15 @@ resource "google_cloud_run_service" "archiver" {
       containers {
         image = "gcr.io/${local.project}/archiver"
         env {
+          name  = "ENVIRONMENT"
+          value = "prod"
+        }
+        env {
           name  = "GOOGLE_CLOUD_PROJECT"
           value = local.project
         }
         env {
-          name  = "HOTDOGGIES_ARCHIVAL_BUCKET"
+          name  = "ARCHIVAL_BUCKET"
           value = google_storage_bucket.archiver-bucket.name
         }
         resources {
@@ -83,6 +68,19 @@ resource "google_cloud_run_service_iam_binding" "archiver-users" {
   ]
 }
 
+resource "google_pubsub_subscription" "archiver" {
+  project = local.project
+  name    = "${local.prefix}-archiver-push"
+  topic   = google_pubsub_topic.topic.name
+  filter  = ""
+  push_config {
+    push_endpoint = google_cloud_run_service.archiver.status[0].url
+    oidc_token {
+      service_account_email = google_service_account.pubsub-pusher.email
+    }
+  }
+}
+
 resource "google_storage_bucket" "archiver-bucket" {
   project                     = local.project
   name                        = "${local.prefix}-archive-bucket"
@@ -94,22 +92,23 @@ resource "google_storage_bucket" "archiver-bucket" {
 resource "google_cloudbuild_trigger" "archiver" {
   project     = local.project
   provider    = google-beta
+  github {
+    name  = local.repo
+    owner = local.repo_owner
+    push {
+      branch = local.branch
+    }
+  }
   name        = "${local.prefix}-archiver"
-  description = "${local.prefix}-archiver-ci"
+  description = "Build pipeline for ${local.prefix}-archiver"
   substitutions = {
-    _HOTDOGGIES_ENVIRONMENT     = "prod"
-    _HOTDOGGIES_SERVICE         = "archiver"
-    _HOTDOGGIES_REGION          = local.region
-    _HOTDOGGIES_PREFIX          = local.prefix
-    _HOTDOGGIES_ARCHIVAL_BUCKET = google_storage_bucket.archiver-bucket.name
+    _ENVIRONMENT     = "prod"
+    _SERVICE         = "archiver"
+    _REGION          = local.region
+    _PREFIX          = local.prefix
+    _ARCHIVAL_BUCKET = google_storage_bucket.archiver-bucket.name
   }
   filename = "../services/archiver/cloudbuild.yaml"
-
-  trigger_template {
-    project_id  = local.project
-    branch_name = "main"
-    repo_name   = local.repo
-  }
 }
 
 output "archiver-endpoint" {

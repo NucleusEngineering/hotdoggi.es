@@ -25,7 +25,7 @@ def index():
 
         with tracer.span(name="hotdoggies-archiver.write"):
             client = storage.Client()
-            bucket = client.bucket(os.environ["HOTDOGGIES_ARCHIVAL_BUCKET"])
+            bucket = client.bucket(os.environ["ARCHIVAL_BUCKET"])
             blob = bucket.blob(f"{type_name}/{identifier}")
             blob.upload_from_string(data=to_json(event), content_type="application/json")
             blob.metadata = {

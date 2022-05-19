@@ -1,16 +1,13 @@
 steps:
 - name: 'gcr.io/cloud-builders/docker'
-  args: ['build','-t', 'gcr.io/$PROJECT_ID/$_HOTDOGGIES_SERVICE', '$_HOTDOGGIES_SERVICE/']
+  args: ['build','-t', 'gcr.io/$PROJECT_ID/$_SERVICE', '$_SERVICE/']
 - name: 'gcr.io/cloud-builders/docker'
-  args: ['push','gcr.io/$PROJECT_ID/$_HOTDOGGIES_SERVICE']
+  args: ['push','gcr.io/$PROJECT_ID/$_SERVICE']
 - name: 'gcr.io/cloud-builders/gcloud'
   args:
   - 'beta'
   - 'run'
   - 'deploy'
-  - '--platform=managed'
-  - '--region=$_HOTDOGGIES_REGION'
-  - '--image=gcr.io/$PROJECT_ID/$_HOTDOGGIES_SERVICE'
-  - '--memory=1024Mi'
-  - '--set-env-vars=GOOGLE_CLOUD_PROJECT=$PROJECT_ID,HOTDOGGIES_ARCHIVAL_BUCKET=$_HOTDOGGIES_ARCHIVAL_BUCKET'
-  - '$_HOTDOGGIES_PREFIX-$_HOTDOGGIES_SERVICE'
+  - '--region=$_REGION'
+  - '--image=gcr.io/$PROJECT_ID/$_SERVICE'
+  - '$_PREFIX-$_SERVICE'

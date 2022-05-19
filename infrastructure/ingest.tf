@@ -16,12 +16,6 @@ resource "google_project_iam_member" "ingest-sa-firestore" {
   member  = "serviceAccount:${google_service_account.ingest.email}"
 }
 
-resource "google_project_iam_member" "ingest-sa-logging" {
-  project = local.project
-  role    = "roles/logging.logWriter"
-  member  = "serviceAccount:${google_service_account.ingest.email}"
-}
-
 resource "google_project_iam_member" "ingest-sa-cloudtrace" {
   project = local.project
   role    = "roles/cloudtrace.agent"
@@ -38,6 +32,14 @@ resource "google_cloud_run_service" "ingest" {
       service_account_name = google_service_account.ingest.email
       containers {
         image = "gcr.io/${local.project}/ingest"
+        env {
+          name  = "GATEWAY_SA"
+          value = google_service_account.proxy.email
+        }
+        env {
+          name  = "ENVIRONMENT"
+          value = "prod"
+        }
         env {
           name  = "GOOGLE_CLOUD_PROJECT"
           value = local.project
@@ -56,34 +58,35 @@ resource "google_cloud_run_service" "ingest" {
   }
 }
 
-resource "google_cloud_run_service_iam_binding" "ingest-users" {
+resource "google_cloud_run_service_iam_binding" "ingest" {
   project  = local.project
   location = local.region
   service  = google_cloud_run_service.ingest.name
   role     = "roles/run.invoker"
   members = [
-    "user:stamer@google.com"
+    "serviceAccount:${google_service_account.proxy.email}"
   ]
 }
 
 resource "google_cloudbuild_trigger" "ingest" {
   project     = local.project
   provider    = google-beta
+  github {
+    name  = local.repo
+    owner = local.repo_owner
+    push {
+      branch = local.branch
+    }
+  }
   name        = "${local.prefix}-ingest"
-  description = "${local.prefix}-ingest-ci"
+  description = "Build pipeline for ${local.prefix}-ingest"
   substitutions = {
-    _HOTDOGGIES_ENVIRONMENT = "prod"
-    _HOTDOGGIES_SERVICE     = "ingest"
-    _HOTDOGGIES_REGION      = local.region
-    _HOTDOGGIES_PREFIX      = local.prefix
+    _ENVIRONMENT = "prod"
+    _SERVICE     = "ingest"
+    _REGION      = local.region
+    _PREFIX      = local.prefix
   }
   filename = "../services/ingest/cloudbuild.yaml"
-
-  trigger_template {
-    project_id  = local.project
-    branch_name = "main"
-    repo_name   = local.repo
-  }
 }
 
 output "ingest-endpoint" {

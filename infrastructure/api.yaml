@@ -19,7 +19,7 @@ securityDefinitions:
 security:
   - firebase: []
 paths:
-  /dogs/events:
+  /events:
     post:
       summary: Post an event
       security:

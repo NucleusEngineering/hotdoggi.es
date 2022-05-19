@@ -28,7 +28,7 @@ def index():
         client = bigquery.Client()
 
         project_id = os.environ["GOOGLE_CLOUD_PROJECT"]
-        dataset_name = os.environ["HOTDOGGIES_BQ_DATASET"]
+        dataset_name = os.environ["BQ_DATASET"]
         table_name = type_name.replace(".", "_")
 
         try:

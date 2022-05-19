@@ -1,32 +1,27 @@
-# Allow Proxy SA to invoke this service
-resource "google_cloud_run_service_iam_binding" "dogs" {
-  project  = local.project
-  location = local.region
-  service  = google_cloud_run_service.dogs.name
-  role     = "roles/run.invoker"
-  members = [
-    "serviceAccount:${google_service_account.proxy.email}"
-  ]
-}
-
-# SA with perms for this service
 resource "google_service_account" "dogs" {
   project      = local.project
   account_id   = "${local.prefix}-dogs"
   display_name = "${local.prefix}-dogs"
 }
+
+resource "google_service_account_iam_binding" "dogs-sa-user" {
+  service_account_id = google_service_account.dogs.name
+  role               = "roles/iam.serviceAccountUser"
+  member = "serviceAccount:${local.project_number}@cloudbuild.gserviceaccount.com"
+}
+
 resource "google_project_iam_member" "dogs-firestore" {
   project = local.project
   role    = "roles/datastore.user"
   member  = "serviceAccount:${google_service_account.dogs.email}"
 }
+
 resource "google_project_iam_member" "dogs-cloudtrace" {
   project = local.project
   role    = "roles/cloudtrace.agent"
   member  = "serviceAccount:${google_service_account.dogs.email}"
 }
 
-# Service definition
 resource "google_cloud_run_service" "dogs" {
   project  = local.project
   provider = google-beta
@@ -49,6 +44,11 @@ resource "google_cloud_run_service" "dogs" {
           name  = "GOOGLE_CLOUD_PROJECT"
           value = local.project
         }
+        resources {
+          limits = {
+            memory = "256Mi"
+          }
+        }
       }
     }
   }
@@ -58,7 +58,17 @@ resource "google_cloud_run_service" "dogs" {
   }
 }
 
-# Service build trigger
+resource "google_cloud_run_service_iam_binding" "dogs" {
+  project  = local.project
+  location = local.region
+  service  = google_cloud_run_service.dogs.name
+  role     = "roles/run.invoker"
+  members = [
+    "serviceAccount:${google_service_account.proxy.email}",
+    "serviceAccount:${google_service_account.pubsub-pusher.email}"
+  ]
+}
+
 resource "google_cloudbuild_trigger" "dogs" {
   project  = local.project
   provider = google-beta
@@ -72,18 +82,14 @@ resource "google_cloudbuild_trigger" "dogs" {
   name        = "${local.prefix}-dogs"
   description = "Build pipeline for ${local.prefix}-dogs"
   substitutions = {
+    _ENVIRONMENT = "prod"
+    _SERVICE = "dogs"
     _REGION  = local.region
     _PREFIX  = local.prefix
-    _SERVICE = "dogs"
   }
   filename = "services/dogs/cloudbuild.yaml"
 }
 
-# Allow Cloud Build to bind SA
-resource "google_service_account_iam_binding" "dogs-sa-user" {
-  service_account_id = google_service_account.dogs.name
-  role               = "roles/iam.serviceAccountUser"
-  members = [
-    "serviceAccount:${local.project_number}@cloudbuild.gserviceaccount.com"
-  ]
+output "dogs-endpoint" {
+  value = google_cloud_run_service.dogs.status[0].url
 }
