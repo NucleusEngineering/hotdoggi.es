@@ -29,11 +29,11 @@ resource "google_project_iam_member" "analytics-sa-bq" {
 }
 
 resource "google_bigquery_dataset" "dataset" {
-  project                     = local.project
-  dataset_id                  = "${local.prefix}_events"
-  friendly_name               = "${local.prefix} events"
-  description                 = "All received HOTDOGGIES events"
-  location                    = "EU"
+  project       = local.project
+  dataset_id    = "${local.prefix}_events"
+  friendly_name = "${local.prefix} events"
+  description   = "All received HOTDOGGIES events"
+  location      = "EU"
 
   labels = {
     env = "default"
@@ -116,11 +116,11 @@ resource "google_cloudbuild_trigger" "analytics" {
   name        = "${local.prefix}-analytics"
   description = "${local.prefix}-analytics-ci"
   substitutions = {
-    _HOTDOGGIES_ENVIRONMENT     = "prod"
-    _HOTDOGGIES_SERVICE         = "analytics"
-    _HOTDOGGIES_REGION          = local.region
-    _HOTDOGGIES_PREFIX          = local.prefix
-    _HOTDOGGIES_BQ_DATASET      = google_bigquery_dataset.dataset.dataset_id
+    _HOTDOGGIES_ENVIRONMENT = "prod"
+    _HOTDOGGIES_SERVICE     = "analytics"
+    _HOTDOGGIES_REGION      = local.region
+    _HOTDOGGIES_PREFIX      = local.prefix
+    _HOTDOGGIES_BQ_DATASET  = google_bigquery_dataset.dataset.dataset_id
   }
   filename = "../services/analytics/cloudbuild.yaml"
 

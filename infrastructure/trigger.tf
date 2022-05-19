@@ -59,7 +59,7 @@ resource "google_cloudfunctions_function" "function" {
   }
 
   environment_variables = {
-    HOTDOGGIES_TOPIC           = google_pubsub_topic.topic.name,
+    HOTDOGGIES_TOPIC     = google_pubsub_topic.topic.name,
     GOOGLE_CLOUD_PROJECT = local.project
   }
 }

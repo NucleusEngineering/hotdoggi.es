@@ -1,5 +1,5 @@
 all:
-	app dogs proxy
+	app dogs proxy analytics archiver ingest
 
 deploy:
 	make -C infrastructure init apply
@@ -16,6 +16,15 @@ proxy:
 dogs:
 	make -C services/dogs build
 
+analytics:
+	make -C services/analytics build
+
+archiver:
+	make -C services/archiver build
+
+ingest:
+	make -C services/ingest build
+
 services: dogs
 
-.PHONY: static deploy destroy app proxy services dogs
+.PHONY: static deploy destroy app proxy services dogs analytics archiver ingest

@@ -1,6 +1,6 @@
 SERVICE := app
-PROJECT := hwsh-api
-REGION := europe-west1
+PROJECT := $$(terraform output -json | jq -r '.project.value')
+REGION := $$(terraform output -json | jq -r '.region.value')
 
 run:
 	go run server.go
@@ -13,12 +13,12 @@ update:
 
 clean:
 	rm -rf static
-	rm -rf hwsh/node_modules
+	rm -rf spa/node_modules
 
 compile:
-	cd hwsh && npm install
-	cd hwsh && yarn build
+	cd spa && npm install
+	cd spa && yarn build
 	rm -rf static || exit 0
-	mv hwsh/build static
+	mv spa/build static
 
 .PHONY: run build update test static compile

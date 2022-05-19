@@ -65,5 +65,5 @@ resource "google_service_account_iam_binding" "proxy-sa-user" {
 
 output "gateway_sa" {
   value = google_service_account.proxy.email
-} 
+}
 

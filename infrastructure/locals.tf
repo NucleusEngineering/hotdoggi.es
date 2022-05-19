@@ -11,8 +11,8 @@ locals {
 }
 
 output "project" {
-  value   = local.project
+  value = local.project
 }
 output "region" {
-  value    = local.region
+  value = local.region
 }

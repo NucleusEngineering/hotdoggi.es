@@ -1,7 +1,7 @@
 SERVICE := analytics
-PROJECT := $$(terraform output -json | jq -r '.project.value'))
-REGION := $$(terraform output -json | jq -r '.region.value'))
-GATEWAY_SA := $$(terraform output -json | jq -r '.gateway_sa.value'))
+PROJECT := $$(terraform output -json | jq -r '.project.value')
+REGION := $$(terraform output -json | jq -r '.region.value')
+GATEWAY_SA := $$(terraform output -json | jq -r '.gateway_sa.value')
 
 build:
 	gcloud builds submit --tag=gcr.io/${PROJECT}/${SERVICE} .

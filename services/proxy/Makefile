@@ -1,6 +1,6 @@
 SERVICE := proxy
-PROJECT := $$(terraform output -json | jq -r '.project.value'))
-REGION := $$(terraform output -json | jq -r '.region.value'))
+PROJECT := $$(terraform output -json | jq -r '.project.value')
+REGION := $$(terraform output -json | jq -r '.region.value')
 
 init:
 	go mod init
