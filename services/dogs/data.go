@@ -10,14 +10,18 @@ import (
 	iterator "google.golang.org/api/iterator"
 )
 
-// ThingRef references a thing object
-type ThingRef struct {
-	ID    string `header:"id" json:"id"`
-	Thing Thing  `header:"inline" json:"thing"`
+const (
+	collectionName = "es.hotdoggi.data.dogs"
+)
+
+// DogRef references a dog object
+type DogRef struct {
+	ID  string `header:"id" json:"id"`
+	Dog Dog    `header:"inline" json:"dog"`
 }
 
-// Thing data model
-type Thing struct {
+// Dog data model
+type Dog struct {
 	Name        string   `header:"name" firestore:"name" json:"name"`
 	Description string   `header:"description" firestore:"description" json:"description"`
 	Metadata    Metadata `header:"inline" firestore:"metadata" json:"metadata"`
@@ -25,17 +29,17 @@ type Thing struct {
 
 // Metadata data model
 type Metadata struct {
-	Owner    string    `header:"owner" firestore:"owner"  json:"owner"`
+	Owner    string    `header:"owner" firestore:"owner" json:"owner"`
 	Modified time.Time `firestore:"modified" json:"modified"`
 }
 
-// List all things
-func List(ctx context.Context, c *gin.Context) ([]ThingRef, error) {
-	_, span := trace.StartSpan(ctx, "things.data.list")
+// List all dogs
+func List(ctx context.Context, c *gin.Context) ([]DogRef, error) {
+	_, span := trace.StartSpan(ctx, "dogs.data.list")
 	defer span.End()
-	result := []ThingRef{}
+	result := []DogRef{}
 	client := Global["client.firestore"].(*firestore.Client)
-	iter := client.Collection("things").Documents(ctx)
+	iter := client.Collection(collectionName).Documents(ctx)
 	for {
 		snap, err := iter.Next()
 		if err == iterator.Done {
@@ -44,78 +48,76 @@ func List(ctx context.Context, c *gin.Context) ([]ThingRef, error) {
 		if err != nil {
 			return nil, err
 		}
-		var thing Thing
-		snap.DataTo(&thing)
-		result = append(result, ThingRef{
-			ID:    snap.Ref.ID,
-			Thing: thing,
+		var dog Dog
+		snap.DataTo(&dog)
+		result = append(result, DogRef{
+			ID:  snap.Ref.ID,
+			Dog: dog,
 		})
 	}
 
 	return result, nil
 }
 
-// Get a specific thing
-func Get(ctx context.Context, c *gin.Context, key string) (ThingRef, error) {
-	ctx, span := trace.StartSpan(ctx, "things.data.get")
+// Get a specific dog
+func Get(ctx context.Context, c *gin.Context, key string) (DogRef, error) {
+	ctx, span := trace.StartSpan(ctx, "dogs.data.get")
 	defer span.End()
 	client := Global["client.firestore"].(*firestore.Client)
-	snap, err := client.Collection("things").Doc(key).Get(ctx)
+	snap, err := client.Collection(collectionName).Doc(key).Get(ctx)
 	if err != nil {
-		return ThingRef{}, err
+		return DogRef{}, err
 	}
-	var thing Thing
-	snap.DataTo(&thing)
-	return ThingRef{
-		ID:    snap.Ref.ID,
-		Thing: thing,
+	var dog Dog
+	snap.DataTo(&dog)
+	return DogRef{
+		ID:  snap.Ref.ID,
+		Dog: dog,
 	}, nil
 }
 
-// Add a specific thing
-func Add(ctx context.Context, c *gin.Context, thing Thing) (ThingRef, error) {
-	ctx, span := trace.StartSpan(ctx, "things.data.add")
+// Add a specific dog
+func Add(ctx context.Context, c *gin.Context, dog Dog) (DogRef, error) {
+	ctx, span := trace.StartSpan(ctx, "dogs.data.add")
 	defer span.End()
 	client := Global["client.firestore"].(*firestore.Client)
 
-	thing.Metadata.Owner = c.MustGet("caller.id").(string)
-	thing.Metadata.Modified = time.Now()
+	dog.Metadata.Modified = time.Now()
 
-	result, _, err := client.Collection("things").Add(ctx, thing)
+	result, _, err := client.Collection(collectionName).Add(ctx, dog)
 	if err != nil {
-		return ThingRef{}, err
+		return DogRef{}, err
 	}
-	return ThingRef{
-		ID:    result.ID,
-		Thing: thing,
+	return DogRef{
+		ID:  result.ID,
+		Dog: dog,
 	}, nil
 }
 
-// Update a specific thing
-func Update(ctx context.Context, c *gin.Context, key string, thing Thing) (ThingRef, error) {
-	ctx, span := trace.StartSpan(ctx, "things.data.update")
+// Update a specific dog
+func Update(ctx context.Context, c *gin.Context, key string, dog Dog) (DogRef, error) {
+	ctx, span := trace.StartSpan(ctx, "dogs.data.update")
 	defer span.End()
 	client := Global["client.firestore"].(*firestore.Client)
 
-	thing.Metadata.Owner = c.MustGet("caller.id").(string)
-	thing.Metadata.Modified = time.Now()
+	dog.Metadata.Modified = time.Now()
 
-	_, err := client.Collection("things").Doc(key).Set(ctx, thing)
+	_, err := client.Collection(collectionName).Doc(key).Set(ctx, dog)
 	if err != nil {
-		return ThingRef{}, err
+		return DogRef{}, err
 	}
-	return ThingRef{
-		ID:    key,
-		Thing: thing,
+	return DogRef{
+		ID:  key,
+		Dog: dog,
 	}, nil
 }
 
-// Delete a specific thing
+// Delete a specific dog
 func Delete(ctx context.Context, c *gin.Context, key string) error {
-	ctx, span := trace.StartSpan(ctx, "things.data.delete")
+	ctx, span := trace.StartSpan(ctx, "dogs.data.delete")
 	defer span.End()
 	client := Global["client.firestore"].(*firestore.Client)
-	_, err := client.Collection("things").Doc(key).Delete(ctx)
+	_, err := client.Collection("dogs").Doc(key).Delete(ctx)
 	if err != nil {
 		return err
 	}

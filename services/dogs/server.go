@@ -32,11 +32,9 @@ func main() {
 	authorized := router.Group("/")
 	authorized.Use(Authenticate)
 	{
-		authorized.GET("/things/:key", GetHandler)
-		authorized.GET("/things/", ListHandler)
-		authorized.POST("/things/", PostHandler)
-		authorized.DELETE("/things/:key", DeleteHandler)
-		authorized.PATCH("/things/:key", PatchHandler)
+		authorized.POST("/dogs/events", EventHandler)
+		authorized.GET("/dogs/:key", GetHandler)
+		authorized.GET("/dogs/", ListHandler)
 	}
 	router.Run()
 }
@@ -127,5 +125,4 @@ func Respond(c *gin.Context, code int, obj interface{}) {
 	}
 	c.JSON(code, gin.H{"error": obj})
 	c.Abort()
-	return
 }

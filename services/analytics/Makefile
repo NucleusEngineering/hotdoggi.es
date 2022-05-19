@@ -9,4 +9,4 @@ build:
 update:
 	gcloud run services update ${PROJECT}-${SERVICE} --region=${REGION} --image=gcr.io/${PROJECT}/${SERVICE}
 
-.PHONY: run build update
+.PHONY: build update

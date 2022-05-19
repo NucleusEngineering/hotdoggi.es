@@ -21,4 +21,4 @@ compile:
 	rm -rf static || exit 0
 	mv spa/build static
 
-.PHONY: run build update test static compile
+.PHONY: run build update clean compile
