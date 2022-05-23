@@ -1,11 +1,11 @@
 steps:
 - name: 'ubuntu'
   args:
-  - 'apt'
+  - 'apt-get'
   - 'update'
   - '-y'
   - '&&'
-  - 'apt'
+  - 'apt-get'
   - 'install'
   - '-y'
   - 'zip'
