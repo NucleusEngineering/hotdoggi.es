@@ -1,6 +1,6 @@
 locals {
   prefix         = "hotdoggies"
-  region         = "europe-west4"
+  region         = "europe-west1"
   project        = "hotdoggi-es"
   project_number = "640843850686"
   organization   = "780482598012"

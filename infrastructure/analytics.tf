@@ -108,11 +108,6 @@ resource "google_bigquery_dataset" "dataset" {
     role          = "OWNER"
     user_by_email = local.user
   }
-
-  access {
-    role   = "READER"
-    domain = local.domain
-  }
 }
 
 resource "google_pubsub_subscription" "analytics" {

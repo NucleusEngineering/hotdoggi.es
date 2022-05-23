@@ -1,6 +1,7 @@
 SERVICE := proxy
-PROJECT := $$(terraform output -json | jq -r '.project.value')
-REGION := $$(terraform output -json | jq -r '.region.value')
+PROJECT := $(shell cd ../../infrastructure && terraform output -json | jq -r '.project.value')
+REGION := $(shell cd ../../infrastructure && terraform output -json | jq -r '.region.value')
+GATEWAY_SA := $(shell cd ../../infrastructure && terraform output -json | jq -r '.gateway_sa.value')
 
 init:
 	go mod init
@@ -9,6 +10,7 @@ run:
 	go run server.go
 
 build:
+	gcloud services enable cloudbuild.googleapis.com
 	sh configure.sh
 	gcloud builds submit --tag=gcr.io/${PROJECT}/${SERVICE} .
 	echo "undefined" > service.json

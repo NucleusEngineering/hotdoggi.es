@@ -3,6 +3,6 @@ steps:
   args:
   - 'functions'
   - 'deploy'
-  - '$_HOTDOGGIES_PREFIX-$_HOTDOGGIES_FUNCTION'
-  - '--source=$_HOTDOGGIES_REPO'
-  - '--region=$_HOTDOGGIES_REGION'
+  - '$_PREFIX-$_FUNCTION'
+  - '--source=$_REPO'
+  - '--region=$_REGION'

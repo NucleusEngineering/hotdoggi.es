@@ -48,6 +48,8 @@ resource "google_cloudfunctions_function" "function" {
   service_account_email = google_service_account.trigger.email
   available_memory_mb   = 256
 
+  ingress_settings = "ALLOW_INTERNAL_AND_GCLB"
+
   source_repository {
     url = "https://source.developers.google.com/projects/${local.project}/repos/${local.repo}/moveable-aliases/main/paths/trigger"
   }
@@ -67,22 +69,23 @@ resource "google_cloudfunctions_function" "function" {
 resource "google_cloudbuild_trigger" "trigger" {
   project     = local.project
   provider    = google-beta
+  github {
+    name  = local.repo
+    owner = local.repo_owner
+    push {
+      branch = local.branch
+    }
+  }
   name        = "${local.prefix}-trigger"
-  description = "${local.prefix}-trigger-ci"
+  description = "Build pipeline for ${local.prefix}-trigger"
 
   substitutions = {
-    _HOTDOGGIES_ENVIRONMENT = "prod"
-    _HOTDOGGIES_FUNCTION    = "trigger"
-    _HOTDOGGIES_PREFIX      = local.prefix
-    _HOTDOGGIES_REPO        = google_cloudfunctions_function.function.source_repository[0].url
-    _HOTDOGGIES_REGION      = local.region
+    _ENVIRONMENT = "prod"
+    _FUNCTION    = "trigger"
+    _PREFIX      = local.prefix
+    _REPO        = google_cloudfunctions_function.function.source_repository[0].url
+    _REGION      = local.region
   }
 
-  filename = "../services/trigger/cloudbuild.yaml"
-
-  trigger_template {
-    project_id  = local.project
-    branch_name = "main"
-    repo_name   = local.repo
-  }
+  filename = "services/trigger/cloudbuild.yaml"
 }

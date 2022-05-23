@@ -81,7 +81,7 @@ resource "google_pubsub_subscription" "archiver" {
 
 resource "google_storage_bucket" "archiver-bucket" {
   project                     = local.project
-  name                        = "${local.prefix}-archive-bucket"
+  name                        = "${local.prefix}-archival-bucket"
   uniform_bucket_level_access = true
   location                    = "EU"
   force_destroy               = true

@@ -84,7 +84,7 @@ resource "google_cloudbuild_trigger" "ingest" {
     _REGION      = local.region
     _PREFIX      = local.prefix
   }
-  filename = "../services/ingest/cloudbuild.yaml"
+  filename = "services/ingest/cloudbuild.yaml"
 }
 
 output "ingest-endpoint" {

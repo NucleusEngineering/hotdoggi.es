@@ -1,9 +1,10 @@
 SERVICE := analytics
-PROJECT := $$(terraform output -json | jq -r '.project.value')
-REGION := $$(terraform output -json | jq -r '.region.value')
-GATEWAY_SA := $$(terraform output -json | jq -r '.gateway_sa.value')
+PROJECT := $(shell cd ../../infrastructure && terraform output -json | jq -r '.project.value')
+REGION := $(shell cd ../../infrastructure && terraform output -json | jq -r '.region.value')
+GATEWAY_SA := $(shell cd ../../infrastructure && terraform output -json | jq -r '.gateway_sa.value')
 
 build:
+	gcloud services enable cloudbuild.googleapis.com
 	gcloud builds submit --tag=gcr.io/${PROJECT}/${SERVICE} .
 
 update:
