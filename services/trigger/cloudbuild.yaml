@@ -3,7 +3,6 @@ steps:
   args:
   - 'apt-get'
   - 'update'
-  - '-y'
   - '&&'
   - 'apt-get'
   - 'install'
