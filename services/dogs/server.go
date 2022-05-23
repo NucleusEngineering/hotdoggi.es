@@ -32,7 +32,7 @@ func main() {
 	authorized := router.Group("/")
 	authorized.Use(Authenticate)
 	{
-		authorized.POST("/dogs/events", EventHandler)
+		authorized.POST("/dogs/events/", EventHandler)
 		authorized.GET("/dogs/:key", GetHandler)
 		authorized.GET("/dogs/", ListHandler)
 	}
