@@ -14,6 +14,7 @@ resource "google_service_account" "proxy" {
   account_id   = "${local.prefix}-proxy"
   display_name = "${local.prefix}-proxy"
 }
+
 resource "google_project_iam_member" "proxy-servicecontrol" {
   project = local.project
   role    = "roles/servicemanagement.serviceController"

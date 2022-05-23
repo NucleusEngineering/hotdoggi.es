@@ -90,6 +90,12 @@ resource "google_cloudbuild_trigger" "trigger" {
   filename = "services/trigger/cloudbuild.yaml"
 }
 
+resource "google_project_iam_member" "trigger-function-deployer" {
+  project                     = local.project
+  role               = "roles/cloudfunctions.admin"
+  member             = "serviceAccount:${local.project_number}@cloudbuild.gserviceaccount.com"
+}
+
 resource "google_storage_bucket" "function-bucket" {
   project                     = local.project
   name                        = "${local.prefix}-function-source-bucket"
