@@ -1,5 +1,4 @@
-all:
-	app dogs proxy analytics archiver ingest
+all: analytics archiver ingest services app
 
 deploy:
 	make -C infrastructure init apply

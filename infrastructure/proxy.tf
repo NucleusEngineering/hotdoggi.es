@@ -1,12 +1,11 @@
 # Disable authentication check to invoke this service
-resource "google_cloud_run_service_iam_binding" "public" {
+resource "google_cloud_run_service_iam_member" "public" {
   location = local.region
   project  = local.project
   service  = google_cloud_run_service.proxy.name
   role     = "roles/run.invoker"
-  members = [
-    "allUsers"
-  ]
+  member   = "allUsers"
+
 }
 
 # SA with perms for this service
@@ -55,12 +54,11 @@ resource "google_cloud_run_domain_mapping" "proxy" {
 }
 
 # Allow Cloud Build to bind SA
-resource "google_service_account_iam_binding" "proxy-sa-user" {
+resource "google_service_account_iam_member" "proxy-sa-user" {
+  provider           = google-beta
   service_account_id = google_service_account.proxy.name
   role               = "roles/iam.serviceAccountUser"
-  members = [
-    "serviceAccount:${local.project_number}@cloudbuild.gserviceaccount.com"
-  ]
+  member             = "serviceAccount:${local.project_number}@cloudbuild.gserviceaccount.com"
 }
 
 output "gateway_sa" {

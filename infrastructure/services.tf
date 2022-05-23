@@ -4,6 +4,12 @@ resource "google_project_service" "cloudrun" {
   disable_on_destroy = false
 }
 
+resource "google_project_service" "cloudfunctions" {
+  project            = local.project
+  service            = "cloudfunctions.googleapis.com"
+  disable_on_destroy = false
+}
+
 resource "google_project_service" "cloudbuild" {
   project            = local.project
   service            = "cloudbuild.googleapis.com"
@@ -59,10 +65,9 @@ resource "google_project_service" "cloudresourcemanager" {
 }
 
 # Allow Cloud Build to deploy to Cloud Run
-resource "google_project_iam_binding" "cloudbuild-deploy-binding" {
+resource "google_project_iam_member" "cloudbuild-deploy" {
   project = local.project
   role    = "roles/run.admin"
-  members = [
-    "serviceAccount:${local.project_number}@cloudbuild.gserviceaccount.com"
-  ]
+  member  = "serviceAccount:${local.project_number}@cloudbuild.gserviceaccount.com"
+
 }

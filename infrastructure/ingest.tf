@@ -58,19 +58,17 @@ resource "google_cloud_run_service" "ingest" {
   }
 }
 
-resource "google_cloud_run_service_iam_binding" "ingest" {
+resource "google_cloud_run_service_iam_member" "ingest" {
   project  = local.project
   location = local.region
   service  = google_cloud_run_service.ingest.name
   role     = "roles/run.invoker"
-  members = [
-    "serviceAccount:${google_service_account.proxy.email}"
-  ]
+  member   = "serviceAccount:${google_service_account.proxy.email}"
 }
 
 resource "google_cloudbuild_trigger" "ingest" {
-  project     = local.project
-  provider    = google-beta
+  project  = local.project
+  provider = google-beta
   github {
     name  = local.repo
     owner = local.repo_owner

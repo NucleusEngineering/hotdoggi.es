@@ -1,12 +1,10 @@
 # Disable authentication check to invoke this service
-resource "google_cloud_run_service_iam_binding" "app" {
+resource "google_cloud_run_service_iam_member" "app" {
   project  = local.project
   location = local.region
   service  = google_cloud_run_service.app.name
   role     = "roles/run.invoker"
-  members = [
-    "allUsers",
-  ]
+  member   = "allUsers"
 }
 
 # SA with perms for this service
@@ -76,10 +74,9 @@ resource "google_cloudbuild_trigger" "app" {
 }
 
 # Allow Cloud Build to bind SA
-resource "google_service_account_iam_binding" "app-sa-user" {
+resource "google_service_account_iam_member" "app-sa-user" {
+  provider           = google-beta
   service_account_id = google_service_account.app.name
   role               = "roles/iam.serviceAccountUser"
-  members = [
-    "serviceAccount:${local.project_number}@cloudbuild.gserviceaccount.com"
-  ]
+  member             = "serviceAccount:${local.project_number}@cloudbuild.gserviceaccount.com"
 }

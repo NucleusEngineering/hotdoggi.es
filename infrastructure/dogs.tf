@@ -4,10 +4,10 @@ resource "google_service_account" "dogs" {
   display_name = "${local.prefix}-dogs"
 }
 
-resource "google_service_account_iam_binding" "dogs-sa-user" {
+resource "google_service_account_iam_member" "dogs-sa-user" {
   service_account_id = google_service_account.dogs.name
   role               = "roles/iam.serviceAccountUser"
-  member = "serviceAccount:${local.project_number}@cloudbuild.gserviceaccount.com"
+  member             = "serviceAccount:${local.project_number}@cloudbuild.gserviceaccount.com"
 }
 
 resource "google_project_iam_member" "dogs-firestore" {
@@ -58,15 +58,20 @@ resource "google_cloud_run_service" "dogs" {
   }
 }
 
-resource "google_cloud_run_service_iam_binding" "dogs" {
+resource "google_cloud_run_service_iam_member" "dogs-gateway" {
   project  = local.project
   location = local.region
   service  = google_cloud_run_service.dogs.name
   role     = "roles/run.invoker"
-  members = [
-    "serviceAccount:${google_service_account.proxy.email}",
-    "serviceAccount:${google_service_account.pubsub-pusher.email}"
-  ]
+  member   = "serviceAccount:${google_service_account.proxy.email}"
+}
+
+resource "google_cloud_run_service_iam_member" "dogs-pubsub" {
+  project  = local.project
+  location = local.region
+  service  = google_cloud_run_service.dogs.name
+  role     = "roles/run.invoker"
+  member   = "serviceAccount:${google_service_account.pubsub-pusher.email}"
 }
 
 resource "google_cloudbuild_trigger" "dogs" {
@@ -83,9 +88,9 @@ resource "google_cloudbuild_trigger" "dogs" {
   description = "Build pipeline for ${local.prefix}-dogs"
   substitutions = {
     _ENVIRONMENT = "prod"
-    _SERVICE = "dogs"
-    _REGION  = local.region
-    _PREFIX  = local.prefix
+    _SERVICE     = "dogs"
+    _REGION      = local.region
+    _PREFIX      = local.prefix
   }
   filename = "services/dogs/cloudbuild.yaml"
 }

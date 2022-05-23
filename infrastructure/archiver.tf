@@ -58,14 +58,12 @@ resource "google_cloud_run_service" "archiver" {
   }
 }
 
-resource "google_cloud_run_service_iam_binding" "archiver-users" {
+resource "google_cloud_run_service_iam_member" "archiver-users" {
   project  = local.project
   location = local.region
   service  = google_cloud_run_service.archiver.name
   role     = "roles/run.invoker"
-  members = [
-    "serviceAccount:${google_service_account.pubsub-pusher.email}"
-  ]
+  member   = "serviceAccount:${google_service_account.pubsub-pusher.email}"
 }
 
 resource "google_pubsub_subscription" "archiver" {
@@ -90,8 +88,8 @@ resource "google_storage_bucket" "archiver-bucket" {
 }
 
 resource "google_cloudbuild_trigger" "archiver" {
-  project     = local.project
-  provider    = google-beta
+  project  = local.project
+  provider = google-beta
   github {
     name  = local.repo
     owner = local.repo_owner

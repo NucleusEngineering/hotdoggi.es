@@ -58,19 +58,17 @@ resource "google_cloud_run_service" "analytics" {
   }
 }
 
-resource "google_cloud_run_service_iam_binding" "analytics" {
+resource "google_cloud_run_service_iam_member" "analytics" {
   project  = local.project
   location = local.region
   service  = google_cloud_run_service.analytics.name
   role     = "roles/run.invoker"
-  members = [
-    "serviceAccount:${google_service_account.pubsub-pusher.email}"
-  ]
+  member   = "serviceAccount:${google_service_account.pubsub-pusher.email}"
 }
 
 resource "google_cloudbuild_trigger" "analytics" {
-  project     = local.project
-  provider    = google-beta
+  project  = local.project
+  provider = google-beta
   github {
     name  = local.repo
     owner = local.repo_owner
