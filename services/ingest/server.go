@@ -35,8 +35,8 @@ func main() {
 
 	router := gin.Default()
 
-	router.POST("/:type/:source", func(c *gin.Context) {
-		ctx, span := trace.StartSpan(ctx, "hotdoggies-ingest")
+	router.POST("/events/:type/:source", func(c *gin.Context) {
+		ctx, span := trace.StartSpan(ctx, "ingest.handler.event")
 		defer span.End()
 		traceparent := fmt.Sprintf("00-%s-%s-0%d",
 			span.SpanContext().TraceID.String(),
@@ -70,7 +70,7 @@ func main() {
 }
 
 func validate(ctx context.Context, c *gin.Context) (int, error) {
-	_, span := trace.StartSpan(ctx, "hotdoggies-ingest.validation")
+	_, span := trace.StartSpan(ctx, "ingest.validate")
 	defer span.End()
 	log.Printf("validating type\n")
 
@@ -85,10 +85,13 @@ func validate(ctx context.Context, c *gin.Context) (int, error) {
 	typeName := c.Param("type")
 
 	switch typeName {
-	case "es.hotdoggi.events.doggy_arrived":
+	case "es.hotdoggi.events.dog_added":
 		// TODO implement type validation and return errors
 		log.Printf("validation successful for type: %s\n", typeName)
-	case "es.hotdoggi.events.pickup_arrived":
+	case "es.hotdoggi.events.dog_removed":
+		// TODO implement type validation and return errors
+		log.Printf("validation successful for type: %s\n", typeName)
+	case "es.hotdoggi.events.dog_updated":
 		// TODO implement type validation and return errors
 		log.Printf("validation successful for type: %s\n", typeName)
 	default:
@@ -98,7 +101,7 @@ func validate(ctx context.Context, c *gin.Context) (int, error) {
 }
 
 func commit(ctx context.Context, c *gin.Context, client *firestore.Client, traceparent string) (int, error) {
-	ctx, span := trace.StartSpan(ctx, "hotdoggies-ingest.commit")
+	ctx, span := trace.StartSpan(ctx, "ingest.commit")
 	defer span.End()
 	typeName := c.Param("type")
 	log.Printf("starting commit transaction for type: %s\n", typeName)

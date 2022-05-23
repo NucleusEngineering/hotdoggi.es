@@ -21,6 +21,12 @@ resource "google_project_iam_member" "proxy-servicecontrol" {
   member  = "serviceAccount:${google_service_account.proxy.email}"
 }
 
+resource "google_project_iam_member" "proxy-sa-cloudtrace" {
+  project = local.project
+  role    = "roles/cloudtrace.agent"
+  member  = "serviceAccount:${google_service_account.proxy.email}"
+}
+
 # Service definition
 resource "google_cloud_run_service" "proxy" {
   provider = google-beta

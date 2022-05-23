@@ -20,10 +20,10 @@ app = Flask(__name__)
 def index():
     event = unwrap(request)
     tracer = pickup_trace(event["traceparent"])
-    with tracer.span(name="hotdoggies-analytics"):
+    with tracer.span(name="analytics.handler.event"):
         identifier = event["id"]
         type_name = event["type"]
-        print(f"HOTDOGGIES processing event: {identifier}")
+        print(f"processing event: {identifier}")
 
         client = bigquery.Client()
 
@@ -32,11 +32,11 @@ def index():
         table_name = type_name.replace(".", "_")
 
         try:
-            with tracer.span(name="hotdoggies-analytics.check"):
+            with tracer.span(name="analytics.check"):
                 client.get_table(f"{project_id}.{dataset_name}.{table_name}")
         except NotFound:
             # Job insertion with schema auto detection
-            with tracer.span(name="hotdoggies-analytics.load"):
+            with tracer.span(name="analytics.load"):
                 print(f"HOTDOGGIES loading job: {identifier}:{table_name}")
 
                 dataset_ref = client.dataset(dataset_name)
@@ -55,18 +55,18 @@ def index():
                     job_config=job_config,
                 )
 
-                print(f"HOTDOGGIES pushed job: {job.job_id}")
+                print(f"pushed job: {job.job_id}")
                 return ("", 204)
 
         # Stream insertion
-        with tracer.span(name="hotdoggies-analytics.insert"):
-            print(f"HOTDOGGIES streaming insert: {identifier}:{table_name}")
+        with tracer.span(name="analytics.insert"):
+            print(f"streaming insert: {identifier}:{table_name}")
             rows = [
                 json.load(io.BytesIO(to_json(event)))
             ]
             errors = client.insert_rows_json(f"{project_id}.{dataset_name}.{table_name}", rows)
             if errors != []:
-                print("HOTDOGGIES insert errors: {}".format(errors))
+                print("insert errors: {}".format(errors))
 
     return ("", 204)
 
@@ -85,8 +85,8 @@ def pickup_trace(traceparent):
         exporter=exporter
     )
 
-    print(f"HOTDOGGIES picked up trace: {tracer.span_context.trace_id}")
-    print(f"HOTDOGGIES picked up span: {tracer.span_context.span_id}")
+    print(f"picked up trace: {tracer.span_context.trace_id}")
+    print(f"picked up span: {tracer.span_context.span_id}")
 
     return tracer
 

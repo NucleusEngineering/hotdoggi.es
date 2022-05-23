@@ -28,13 +28,13 @@ FunctionsFramework.cloud_event 'function' do |fs_event|
   )
   trace = OpenCensus::Trace::SpanContext.create_root(trace_context: trace_context)
 
-  trace.in_span 'hotdoggies-trigger' do |_span|
+  trace.in_span 'trigger.handler.event' do |_span|
     event_type = fs_event.subject.split('/')[-2]
     event_id = fs_event.subject.split('/')[-1]
-    logger.info "HOTDOGGIES detected change to: #{event_type}:#{event_id}"
+    logger.info detected change to: #{event_type}:#{event_id}"
 
     event = nil
-    trace.in_span 'hotdoggies-trigger.load' do |_subspan|
+    trace.in_span 'trigger.load' do |_subspan|
       doc = global(:firestore_client).col(event_type).doc(event_id).get
       event = CloudEvents::Event.create(
         id: event_id,
@@ -47,13 +47,13 @@ FunctionsFramework.cloud_event 'function' do |fs_event|
         time: doc[:time],
         data: doc[:data]
       )
-      logger.info "HOTDOGGIES received event: #{event.to_h}"
+      logger.info "received event: #{event.to_h}"
     end
 
-    trace.in_span 'hotdoggies-trigger.publish' do |_subspan|
+    trace.in_span 'trigger.publish' do |_subspan|
       topic = global(:pubsub_client).topic ENV['TOPIC']
       result = topic.publish event.to_h.to_json
-      logger.info "HOTDOGGIES publish event message: #{result.message_id}"
+      logger.info "publish event message: #{result.message_id}"
     end
   end
 end

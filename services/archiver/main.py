@@ -18,12 +18,12 @@ app = Flask(__name__)
 def index():
     event = unwrap(request)
     tracer = pickup_trace(event["traceparent"])
-    with tracer.span(name="hotdoggies-archiver"):
+    with tracer.span(name="archiver.handler.event"):
         identifier = event["id"]
         type_name = event["type"]
-        print(f"HOTDOGGIES processing event: {identifier}")
+        print(f"processing event: {identifier}")
 
-        with tracer.span(name="hotdoggies-archiver.write"):
+        with tracer.span(name="archiver.write"):
             client = storage.Client()
             bucket = client.bucket(os.environ["ARCHIVAL_BUCKET"])
             blob = bucket.blob(f"{type_name}/{identifier}")
@@ -57,8 +57,8 @@ def pickup_trace(traceparent):
         exporter=exporter
     )
 
-    print(f"HOTDOGGIES picked up trace: {tracer.span_context.trace_id}")
-    print(f"HOTDOGGIES picked up span: {tracer.span_context.span_id}")
+    print(f"picked up trace: {tracer.span_context.trace_id}")
+    print(f"picked up span: {tracer.span_context.span_id}")
 
     return tracer
 
