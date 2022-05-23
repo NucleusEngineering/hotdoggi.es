@@ -50,9 +50,8 @@ resource "google_cloudfunctions_function" "function" {
 
   ingress_settings = "ALLOW_INTERNAL_AND_GCLB"
 
-  source_repository {
-    url = "https://source.developers.google.com/projects/${local.project}/repos/${local.repo}/moveable-aliases/main/paths/trigger"
-  }
+  source_archive_bucket = google_storage_bucket.function-bucket.name
+  source_archive_object = google_storage_bucket_object.function-source.name
 
   entry_point = "function"
   event_trigger {
@@ -61,7 +60,7 @@ resource "google_cloudfunctions_function" "function" {
   }
 
   environment_variables = {
-    HOTDOGGIES_TOPIC     = google_pubsub_topic.topic.name,
+    TOPIC     = google_pubsub_topic.topic.name,
     GOOGLE_CLOUD_PROJECT = local.project
   }
 }
@@ -83,9 +82,28 @@ resource "google_cloudbuild_trigger" "trigger" {
     _ENVIRONMENT = "prod"
     _FUNCTION    = "trigger"
     _PREFIX      = local.prefix
-    _REPO        = google_cloudfunctions_function.function.source_repository[0].url
+    _SOURCE      = "gs://${google_storage_bucket.function-bucket.name}/${google_storage_bucket_object.function-source.name}"
     _REGION      = local.region
+    _BUCKET      = google_storage_bucket.function-bucket.name
   }
 
   filename = "services/trigger/cloudbuild.yaml"
+}
+
+resource "google_storage_bucket" "function-bucket" {
+  project                     = local.project
+  name                        = "${local.prefix}-function-source-bucket"
+  uniform_bucket_level_access = true
+  location                    = "EU"
+  force_destroy               = true
+}
+
+resource "google_storage_bucket_object" "function-source" {
+  name   = "function.zip"
+  bucket = google_storage_bucket.function-bucket.name
+  source = "../services/trigger/function.zip"
+}
+
+output "function-bucket" {
+  value = google_storage_bucket.function-bucket.name
 }

@@ -85,7 +85,7 @@ resource "google_cloudbuild_trigger" "analytics" {
     _PREFIX      = local.prefix
     _BQ_DATASET  = google_bigquery_dataset.dataset.dataset_id
   }
-  filename = "../services/analytics/cloudbuild.yaml"
+  filename = "services/analytics/cloudbuild.yaml"
 }
 
 resource "google_bigquery_dataset" "dataset" {

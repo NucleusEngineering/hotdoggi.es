@@ -1,4 +1,24 @@
 steps:
+- name: 'ubuntu'
+  args:
+  - 'apt'
+  - 'update'
+  - '-y'
+  - '&&'
+  - 'apt'
+  - 'install'
+  - '-y'
+  - 'zip'
+  - '&&'
+  - 'zip'
+  - '-r'
+  - 'services/trigger/function.zip'
+  - 'services/trigger/*'
+- name: 'gcr.io/cloud-builders/gsutil'
+  args:
+  - 'cp'
+  - 'services/trigger/function.zip'
+  - 'gsutil://$_BUCKET'
 - name: 'gcr.io/cloud-builders/gcloud'
   args:
   - 'functions'

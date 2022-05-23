@@ -106,7 +106,7 @@ resource "google_cloudbuild_trigger" "archiver" {
     _PREFIX          = local.prefix
     _ARCHIVAL_BUCKET = google_storage_bucket.archiver-bucket.name
   }
-  filename = "../services/archiver/cloudbuild.yaml"
+  filename = "services/archiver/cloudbuild.yaml"
 }
 
 output "archiver-endpoint" {

@@ -24,6 +24,9 @@ archiver:
 ingest:
 	make -C services/ingest build
 
+trigger:
+	make -C services/trigger build
+
 services: dogs
 
-.PHONY: static deploy destroy app proxy services dogs analytics archiver ingest
+.PHONY: static deploy destroy app proxy services dogs analytics archiver ingest trigger

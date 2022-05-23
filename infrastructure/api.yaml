@@ -1,9 +1,9 @@
 swagger: '2.0'
 info:
-  title: hotdoggi.es API
-  description: hotdoggi.es API
+  title: hotdoggies API
+  description: hotdoggies API
   version: 1.0.0
-host: api.hotdoggi.es # TODO replace
+host: api.hotdoggies.stamer.demo.altostrat.com
 schemes:
   - https
 produces:
@@ -26,7 +26,7 @@ paths:
         - firebase: []
       operationId: post-events
       x-google-backend:
-        address: https://event-endpoint.run.app/ # TODO replace
+        address: https://hotdoggies-ingest-34td3b3ada-ew.a.run.app/
         protocol: h2
         path_translation: APPEND_PATH_TO_ADDRESS
       responses:
@@ -41,7 +41,7 @@ paths:
         - firebase: []
       operationId: list-dogs
       x-google-backend:
-        address: https://service-endpoint.run.app/ # TODO replace
+        address: https://hotdoggies-dogs-34td3b3ada-ew.a.run.app/
         protocol: h2
         path_translation: APPEND_PATH_TO_ADDRESS
       responses:
@@ -62,8 +62,7 @@ paths:
           description: Key of the dog to get
       operationId: get-dogs
       x-google-backend:
-        address: https://service-endpoint.run.app/ # TODO replace
-        address: https://hwsh-api-dogs-e37jkmtdgq-ew.a.run.app 
+        address: https://hotdoggies-dogs-34td3b3ada-ew.a.run.app/
         protocol: h2
         path_translation: APPEND_PATH_TO_ADDRESS
       responses:

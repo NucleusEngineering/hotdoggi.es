@@ -3,12 +3,12 @@ import "firebase/auth";
 
 
 const firebaseConfig = {
-  apiKey: "", // TODO replace
+  apiKey: "AIzaSyAZL8XJG7781vO-IaiN3Ej_F0Y5HUphwyQ",
   authDomain: "hotdoggi-es.firebaseapp.com",
   projectId: "hotdoggi-es",
   storageBucket: "hotdoggi-es.appspot.com",
-  messagingSenderId: "", // TODO replace
-  appId: "" // TODO replace
+  messagingSenderId: "640843850686",
+  appId: "1:640843850686:web:da0016555b4396b8870fef"
 };
 firebase.initializeApp(firebaseConfig);
 

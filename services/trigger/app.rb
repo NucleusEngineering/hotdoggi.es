@@ -51,7 +51,7 @@ FunctionsFramework.cloud_event 'function' do |fs_event|
     end
 
     trace.in_span 'hotdoggies-trigger.publish' do |_subspan|
-      topic = global(:pubsub_client).topic ENV['HOTDOGGIES_TOPIC']
+      topic = global(:pubsub_client).topic ENV['TOPIC']
       result = topic.publish event.to_h.to_json
       logger.info "HOTDOGGIES publish event message: #{result.message_id}"
     end
