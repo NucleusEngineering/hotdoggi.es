@@ -123,6 +123,3 @@ resource "google_pubsub_subscription" "analytics" {
   }
 }
 
-output "analytics-endpoint" {
-  value = google_cloud_run_service.analytics.status[0].url
-}

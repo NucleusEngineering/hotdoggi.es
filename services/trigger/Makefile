@@ -1,8 +1,8 @@
 SERVICE := trigger
-PROJECT := $(shell cd ../../infrastructure && terraform output -json | jq -r '.project.value')
-PREFIX := $(shell cd ../../infrastructure && terraform output -json | jq -r '.prefix.value')
-BUCKET := $(shell cd ../../infrastructure && terraform output -json | jq -r '.function-bucket.value')
-REGION := $(shell cd ../../infrastructure && terraform output -json | jq -r '.region.value')
+PROJECT := $(shell terraform -chdir=../../infrastructure output -json | jq -r '.project.value')
+PREFIX := $(shell terraform -chdir=../../infrastructure output -json | jq -r '.prefix.value')
+BUCKET := $(shell terraform -chdir=../../infrastructure output -json | jq -r '.function_bucket.value')
+REGION := $(shell terraform -chdir=../../infrastructure output -json | jq -r '.region.value')
 
 build: clean
 	zip -r function.zip *

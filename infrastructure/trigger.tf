@@ -110,6 +110,6 @@ resource "google_storage_bucket_object" "function-source" {
   source = "../services/trigger/function.zip"
 }
 
-output "function-bucket" {
+output "function_bucket" {
   value = google_storage_bucket.function-bucket.name
 }

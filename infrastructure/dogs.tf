@@ -74,6 +74,19 @@ resource "google_cloud_run_service_iam_member" "dogs-pubsub" {
   member   = "serviceAccount:${google_service_account.pubsub-pusher.email}"
 }
 
+resource "google_pubsub_subscription" "dogs" {
+  project = local.project
+  name    = "${local.prefix}-dogs-push"
+  topic   = google_pubsub_topic.topic.name
+  filter  = "" # TODO fix"hasPrefix(attributes.type, 'es.hotdoggi.events.dog_')"
+  push_config {
+    push_endpoint = google_cloud_run_service.dogs.status[0].url
+    oidc_token {
+      service_account_email = google_service_account.pubsub-pusher.email
+    }
+  }
+}
+
 resource "google_cloudbuild_trigger" "dogs" {
   project  = local.project
   provider = google-beta
@@ -93,8 +106,4 @@ resource "google_cloudbuild_trigger" "dogs" {
     _PREFIX      = local.prefix
   }
   filename = "services/dogs/cloudbuild.yaml"
-}
-
-output "dogs-endpoint" {
-  value = google_cloud_run_service.dogs.status[0].url
 }

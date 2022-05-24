@@ -27,6 +27,10 @@ ingest:
 trigger:
 	make -C services/trigger build
 
+load:
+	@clear
+	@ENDPOINT=$(shell terraform -chdir=infrastructure output ingest-endpoint) python3 loader/loader.py
+
 services: dogs
 
 .PHONY: static deploy destroy app proxy services dogs analytics archiver ingest trigger

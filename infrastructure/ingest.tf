@@ -86,7 +86,3 @@ resource "google_cloudbuild_trigger" "ingest" {
   }
   filename = "services/ingest/cloudbuild.yaml"
 }
-
-output "ingest-endpoint" {
-  value = google_cloud_run_service.ingest.status[0].url
-}

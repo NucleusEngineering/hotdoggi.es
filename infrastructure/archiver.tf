@@ -108,7 +108,3 @@ resource "google_cloudbuild_trigger" "archiver" {
   }
   filename = "services/archiver/cloudbuild.yaml"
 }
-
-output "archiver-endpoint" {
-  value = google_cloud_run_service.archiver.status[0].url
-}

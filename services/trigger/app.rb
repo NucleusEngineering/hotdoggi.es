@@ -31,7 +31,7 @@ FunctionsFramework.cloud_event 'function' do |fs_event|
   trace.in_span 'trigger.handler.event' do |_span|
     event_type = fs_event.subject.split('/')[-2]
     event_id = fs_event.subject.split('/')[-1]
-    logger.info detected change to: #{event_type}:#{event_id}"
+    logger.info "detected change to: #{event_type}:#{event_id}"
 
     event = nil
     trace.in_span 'trigger.load' do |_subspan|
@@ -53,6 +53,7 @@ FunctionsFramework.cloud_event 'function' do |fs_event|
     trace.in_span 'trigger.publish' do |_subspan|
       topic = global(:pubsub_client).topic ENV['TOPIC']
       result = topic.publish event.to_h.to_json
+      # TODO maybe we need custom attributes
       logger.info "publish event message: #{result.message_id}"
     end
   end
