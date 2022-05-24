@@ -9,9 +9,18 @@ build: clean
 	gsutil cp function.zip gs://${BUCKET}
 
 clean:
+	rm -rf vendor/ || exit 0
 	rm function.zip || exit 0
+
+init:
+	bundle install
+
+run: init
+	bundle exec functions-framework-ruby --target function
+
+test: run clean
 
 update:
 	functions deploy ${PREFIX}-${SERVICE} --source=gsutil://${BUCKET}/function.zip --region=${REGION}
 
-.PHONY: build clean update
+.PHONY: build clean update test init run

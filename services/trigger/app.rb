@@ -52,8 +52,9 @@ FunctionsFramework.cloud_event 'function' do |fs_event|
 
     trace.in_span 'trigger.publish' do |_subspan|
       topic = global(:pubsub_client).topic ENV['TOPIC']
-      result = topic.publish event.to_h.to_json
-      # TODO maybe we need custom attributes
+      result = topic.publish event.to_h.to_json,
+        type: event.type,
+        source: event.source
       logger.info "publish event message: #{result.message_id}"
     end
   end
