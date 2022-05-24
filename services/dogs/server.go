@@ -25,16 +25,20 @@ func main() {
 
 	exporter := createTraceExporter()
 	defer exporter.StopMetricsExporter()
-	ctx, span := trace.StartSpan(ctx, "things.main")
-	defer span.End()
 
 	router := gin.Default()
-	authorized := router.Group("/")
-	authorized.Use(Authenticate)
+	events := router.Group("/events")
+	events.Use(ContextFromEvent)
 	{
-		authorized.POST("/dogs/events/", EventHandler)
-		authorized.GET("/dogs/:key", GetHandler)
-		authorized.GET("/dogs/", ListHandler)
+		events.POST("/", EventHandler)
+	}
+
+	api := router.Group("/dogs")
+	api.Use(UserContextFromAPI)
+	{
+		api.GET("/:key", GetHandler)
+		api.GET("/", ListHandler)
+
 	}
 	router.Run()
 }
@@ -47,10 +51,6 @@ func configure(ctx context.Context) {
 	}
 	if Global["environment"].(string) == "prod" {
 		gin.SetMode(gin.ReleaseMode)
-		Global["gateway.service_account"] = os.Getenv("GATEWAY_SA")
-		if Global["gateway.service_account"].(string) == "" {
-			log.Fatal("failed to read GATEWAY_SA in production configuration")
-		}
 	}
 	Global["project.id"] = os.Getenv("GOOGLE_CLOUD_PROJECT")
 	if Global["project.id"] == "" {
@@ -125,4 +125,5 @@ func Respond(c *gin.Context, code int, obj interface{}) {
 	}
 	c.JSON(code, gin.H{"error": obj})
 	c.Abort()
+	return
 }

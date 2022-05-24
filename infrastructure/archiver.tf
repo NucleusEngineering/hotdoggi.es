@@ -72,7 +72,7 @@ resource "google_pubsub_subscription" "archiver" {
   topic   = google_pubsub_topic.topic.name
   filter  = ""
   push_config {
-    push_endpoint = google_cloud_run_service.archiver.status[0].url
+    push_endpoint = "${google_cloud_run_service.archiver.status[0].url}/events/"
     oidc_token {
       service_account_email = google_service_account.pubsub-pusher.email
     }

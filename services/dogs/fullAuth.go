@@ -12,14 +12,6 @@ import (
 	gin "github.com/gin-gonic/gin"
 )
 
-// Caller represents the calling API user
-type Caller struct {
-	ID         string `json:"user_id"`
-	Email      string `json:"email"`
-	Name       string `json:"name"`
-	PictureURL string `json:"picture"`
-}
-
 // Authenticate implements the security middleware
 func Authenticate(c *gin.Context) {
 	ctx := c.Request.Context()

@@ -2,9 +2,7 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 
 	gin "github.com/gin-gonic/gin"
@@ -43,23 +41,23 @@ func GetHandler(c *gin.Context) {
 // EventHandler implements POST /
 func EventHandler(c *gin.Context) {
 	ctx := c.MustGet("trace.context").(context.Context)
-	ctx, span := trace.StartSpan(ctx, "dogs.handler.event")
+	_, span := trace.StartSpan(ctx, "dogs.handler.event")
 	defer span.End()
 
-	// TODO move on
+	// TODO implement
 }
 
-func deserializeDog(c *gin.Context) (Dog, error) {
-	body, err := ioutil.ReadAll(c.Request.Body)
-	if err != nil {
-		return Dog{}, err
-	}
+// func deserializeDog(c *gin.Context) (Dog, error) {
+// 	body, err := ioutil.ReadAll(c.Request.Body)
+// 	if err != nil {
+// 		return Dog{}, err
+// 	}
 
-	var dog Dog
-	err = json.Unmarshal(body, &dog)
-	if err != nil {
-		return Dog{}, err
-	}
+// 	var dog Dog
+// 	err = json.Unmarshal(body, &dog)
+// 	if err != nil {
+// 		return Dog{}, err
+// 	}
 
-	return dog, nil
-}
+// 	return dog, nil
+// }

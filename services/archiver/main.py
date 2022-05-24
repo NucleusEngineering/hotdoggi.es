@@ -14,7 +14,7 @@ import opencensus.trace.tracer
 
 app = Flask(__name__)
 
-@app.route("/", methods=["POST"])
+@app.route("/events/", methods=["POST"])
 def index():
     event = unwrap(request)
     tracer = pickup_trace(event["traceparent"])
