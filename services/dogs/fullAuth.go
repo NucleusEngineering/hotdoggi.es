@@ -100,22 +100,22 @@ func Authenticate(c *gin.Context) {
 		Respond(c, http.StatusUnauthorized, "failed to decode user info header")
 		return
 	}
-	var caller Caller
-	err = json.Unmarshal(bytes, &caller)
+	var principal Principal
+	err = json.Unmarshal(bytes, &principal)
 	if err != nil {
 		Respond(c, http.StatusUnauthorized, "failed to deserialize user info header")
 		return
 	}
-	if token.UID != caller.ID {
-		Respond(c, http.StatusUnauthorized, "mismatching inbound caller identities")
+	if token.UID != principal.ID {
+		Respond(c, http.StatusUnauthorized, "mismatching inbound principal identities")
 		return
 	}
 
 	// Verification OK
 
-	c.Set("caller.email", caller.Email)
-	c.Set("caller.id", caller.ID)
-	c.Set("caller.name", caller.Name)
-	c.Set("caller.picture", caller.PictureURL)
+	c.Set("principal.email", principal.Email)
+	c.Set("principal.id", principal.ID)
+	c.Set("principal.name", principal.Name)
+	c.Set("principal.picture", principal.PictureURL)
 	c.Next()
 }
