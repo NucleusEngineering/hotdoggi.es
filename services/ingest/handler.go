@@ -36,7 +36,7 @@ func EventHandler(c *gin.Context) {
 		})
 		return
 	}
-	Respond(c, http.StatusOK, gin.H{
+	Respond(c, http.StatusCreated, gin.H{
 		"message":  "event inserted",
 		"event_id": ref.ID,
 	})
