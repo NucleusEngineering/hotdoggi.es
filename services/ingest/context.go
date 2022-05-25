@@ -66,37 +66,11 @@ func UserContextFromAPI(c *gin.Context) {
 	}
 
 	// Context OK
+
 	c.Set("principal", &apiCaller)
 	c.Set("principal.email", apiCaller.Email)
 	c.Set("principal.id", apiCaller.ID)
 	c.Set("principal.name", apiCaller.Name)
 	c.Set("principal.picture", apiCaller.PictureURL)
-	c.Next()
-}
-
-// UserContextFromEVENT implements a middleware that resolves embedded user context info
-// passed in from the embedded event data.
-func ContextFromEvent(c *gin.Context) {
-	ctx := c.Request.Context()
-	c.Set("trace.context", ctx)
-
-	// Skip verification in non-prod
-	if Global["environment"].(string) != "prod" {
-		c.Next()
-		return
-	}
-
-	// TODO build context injection
-	c.Set("event", "uninjected object")
-
-	// Trace context
-	c.Set("trace.id", "uninjected")
-
-	// Verification OK
-	c.Set("principal", "uninjected pointer")
-	c.Set("principal.email", "uninjected")
-	c.Set("principal.id", "uninjected")
-	c.Set("principal.name", "uninjected")
-	c.Set("principal.picture", "uninjected")
 	c.Next()
 }

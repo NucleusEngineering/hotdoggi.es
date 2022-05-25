@@ -1,0 +1,132 @@
+package main
+
+import (
+	"context"
+	"fmt"
+	"io/ioutil"
+	"log"
+	"net/http"
+
+	firestore "cloud.google.com/go/firestore"
+	gin "github.com/gin-gonic/gin"
+	trace "go.opencensus.io/trace"
+)
+
+type EventData struct {
+	Principal Principal
+	Ref       interface{}
+}
+
+// EventHandler implements POSTing events
+func EventHandler(c *gin.Context) {
+	ctx := c.MustGet("trace.context").(context.Context)
+	ctx, span := trace.StartSpan(ctx, "ingest.handler.event")
+	defer span.End()
+
+	err := validate(ctx, c)
+	if err != nil {
+		Respond(c, http.StatusBadRequest, fmt.Errorf("failed to validate event: %v", err))
+		return
+	}
+	ref, err := commit(ctx, c)
+	if err != nil {
+		Respond(c, http.StatusInternalServerError, fmt.Errorf("failed to commit to event log: %v", err))
+		return
+	}
+	Respond(c, http.StatusOK, gin.H{
+		"message":  "event inserted",
+		"event_id": ref.ID,
+	})
+}
+
+func validate(ctx context.Context, c *gin.Context) error {
+	_, span := trace.StartSpan(ctx, "ingest.validate")
+	defer span.End()
+	log.Printf("validating type\n")
+
+	sourceName := c.Param("source")
+	if sourceName == "" {
+		return fmt.Errorf("no source emitter supplied")
+	}
+
+	typeName := c.Param("type")
+	if c.Param("type") == "" {
+		return fmt.Errorf("no type name supplied")
+	}
+
+	buffer, err := ioutil.ReadAll(c.Request.Body)
+	if err != nil {
+		return fmt.Errorf("failed read body payload: %v", err)
+	}
+
+	// Assume we are talking about dogs
+	var data *DogRef
+	err = data.deserialize(buffer)
+	if err != nil {
+		return fmt.Errorf("failed deserialize payload: %v", err)
+	}
+	err = data.validate(typeName)
+	if err != nil {
+		return fmt.Errorf("failed validate payload: %v", err)
+	}
+
+	// Validation OK
+	c.Set("event.data", data)
+	c.Set("event.type", typeName)
+	c.Set("event.source", sourceName)
+
+	return nil
+}
+
+func commit(ctx context.Context, c *gin.Context) (*firestore.DocumentRef, error) {
+	ctx, span := trace.StartSpan(ctx, "ingest.commit")
+	defer span.End()
+
+	client := Global["client.firestore"].(*firestore.Client)
+	traceparent := c.MustGet("trace.id").(string)
+	principal := c.MustGet("principal").(*Principal)
+	typeName := c.MustGet("event.type").(string)
+	sourceName := c.MustGet("event.source").(string)
+	data := c.MustGet("event.data").(*interface{})
+
+	payload := EventData{
+		Principal: *principal,
+		Ref:       *data,
+	}
+
+	ref, _, err := client.Collection(typeName).Add(ctx, map[string]interface{}{
+		"specversion":     "1.0",
+		"subject":         "hotdoggi.es",
+		"source":          sourceName,
+		"time":            firestore.ServerTimestamp,
+		"traceparent":     traceparent,
+		"datacontenttype": "application/json",
+		"data":            payload,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to insert event into log: %v", err)
+	}
+
+	log.Printf("commit transaction successful for type: %s\n", typeName)
+	return ref, nil
+}
+
+func Respond(c *gin.Context, code int, obj interface{}) {
+	if code < 300 {
+		if obj == nil {
+			c.Status(code)
+			c.Next()
+			return
+		}
+		c.JSON(code, obj)
+		c.Next() //TODO replace
+		return
+	}
+	if obj == nil {
+		c.Status(code)
+		c.Abort()
+		return
+	}
+	c.JSON(code, obj)
+	c.Abort()
+}

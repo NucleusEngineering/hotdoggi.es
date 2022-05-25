@@ -22,10 +22,12 @@ def load(event):
         data = None
         if event == "es.hotdoggi.events.dog_added":
             data = {
-                "name": randomName(),
-                "breed": randomBreed(),
-                "birthday": randomBirthday(),
-                "color": randomColor(),
+                "dog": {
+                    "name": randomName(),
+                    "breed": randomBreed(),
+                    "birthday": randomBirthday(),
+                    "color": randomColor(),
+                }
             }
         else:
             print("unknown event type!")

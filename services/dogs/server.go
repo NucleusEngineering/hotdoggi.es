@@ -70,7 +70,7 @@ func createTraceExporter() *stackdriver.Exporter {
 		log.Fatalf("failed to create trace exporter: %v", err)
 	}
 	trace.RegisterExporter(exporter)
-	trace.ApplyConfig(trace.Config{DefaultSampler: trace.AlwaysSample()})
+	trace.ApplyConfig(trace.Config{DefaultSampler: trace.ProbabilitySampler(0.1)})
 	exporter.StartMetricsExporter()
 	return exporter
 }
@@ -104,26 +104,4 @@ func createHTTPClient(ctx context.Context) *http.Client {
 		},
 	}
 	return client
-}
-
-// Respond terminates transaction with a standard error format
-func Respond(c *gin.Context, code int, obj interface{}) {
-	if code < 300 {
-		if obj == nil {
-			c.Status(code)
-			c.Next()
-			return
-		}
-		c.JSON(code, obj)
-		c.Next()
-		return
-	}
-	if obj == nil {
-		c.Status(code)
-		c.Abort()
-		return
-	}
-	c.JSON(code, gin.H{"error": obj})
-	c.Abort()
-	return
 }

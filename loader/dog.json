@@ -1,6 +1,9 @@
 {
-    "name": "Brudi",
-    "breed": "French Bulddog",
-    "birthday": "2017-01-29",
-    "color": "brown"
+    "id": "1",
+    "dog":{
+        "name": "Brudi",
+        "breed": "French Bulldog",
+        "birthday": "2017-01-29",
+        "color": "brown"
+    }
 }

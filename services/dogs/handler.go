@@ -47,6 +47,10 @@ func EventHandler(c *gin.Context) {
 	// TODO implement
 }
 
+func ProcessDogAdded(ctx, c *gin.Context) error {
+	return nil
+}
+
 // func deserializeDog(c *gin.Context) (Dog, error) {
 // 	body, err := ioutil.ReadAll(c.Request.Body)
 // 	if err != nil {
@@ -61,3 +65,23 @@ func EventHandler(c *gin.Context) {
 
 // 	return dog, nil
 // }
+
+func Respond(c *gin.Context, code int, obj interface{}) {
+	if code < 300 {
+		if obj == nil {
+			c.Status(code)
+			c.Next()
+			return
+		}
+		c.JSON(code, obj)
+		c.Next() //TODO replace
+		return
+	}
+	if obj == nil {
+		c.Status(code)
+		c.Abort()
+		return
+	}
+	c.JSON(code, obj)
+	c.Abort()
+}
