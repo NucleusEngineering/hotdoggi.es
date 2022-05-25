@@ -24,12 +24,16 @@ func EventHandler(c *gin.Context) {
 
 	err := validate(ctx, c)
 	if err != nil {
-		Respond(c, http.StatusBadRequest, fmt.Errorf("failed to validate event: %v", err))
+		Respond(c, http.StatusBadRequest, gin.H{
+			"error": fmt.Sprintf("failed to validate event: %v", err),
+		})
 		return
 	}
 	ref, err := commit(ctx, c)
 	if err != nil {
-		Respond(c, http.StatusInternalServerError, fmt.Errorf("failed to commit to event log: %v", err))
+		Respond(c, http.StatusInternalServerError, gin.H{
+			"error": fmt.Sprintf("failed to commit to event log: %v", err),
+		})
 		return
 	}
 	Respond(c, http.StatusOK, gin.H{
@@ -81,11 +85,16 @@ func commit(ctx context.Context, c *gin.Context) (*firestore.DocumentRef, error)
 	defer span.End()
 
 	client := Global["client.firestore"].(*firestore.Client)
-	traceparent := c.MustGet("trace.id").(string)
 	principal := c.MustGet("principal").(*Principal)
 	typeName := c.MustGet("event.type").(string)
 	sourceName := c.MustGet("event.source").(string)
 	data := c.MustGet("event.data").(*DogRef)
+
+	traceparent := fmt.Sprintf("00-%s-%s-0%d",
+		span.SpanContext().TraceID.String(),
+		span.SpanContext().SpanID.String(),
+		span.SpanContext().TraceOptions,
+	)
 
 	payload := EventData{
 		Principal: *principal,
@@ -108,7 +117,6 @@ func commit(ctx context.Context, c *gin.Context) (*firestore.DocumentRef, error)
 	return ref, nil
 }
 
-// TODO break up in succeed and fail
 func Respond(c *gin.Context, code int, obj interface{}) {
 	if code < 300 {
 		if obj == nil {

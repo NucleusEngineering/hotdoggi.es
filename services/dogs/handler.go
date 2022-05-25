@@ -17,7 +17,9 @@ func ListHandler(c *gin.Context) {
 
 	result, err := List(ctx, c)
 	if err != nil {
-		Respond(c, http.StatusInternalServerError, fmt.Errorf("failed to retrieve objects: %v", err))
+		Respond(c, http.StatusInternalServerError, gin.H{
+			"error": fmt.Sprintf("failed to retrieve objects: %v", err),
+		})
 		return
 	}
 	Respond(c, http.StatusOK, result)
@@ -32,7 +34,9 @@ func GetHandler(c *gin.Context) {
 	key := c.Param("key")
 	result, err := Get(ctx, c, key)
 	if err != nil {
-		Respond(c, http.StatusInternalServerError, fmt.Errorf("failed to retrieve object: %v", err))
+		Respond(c, http.StatusInternalServerError, gin.H{
+			"error": fmt.Sprintf("failed to retrieve object: %v", err),
+		})
 		return
 	}
 	Respond(c, http.StatusOK, result)
@@ -51,22 +55,6 @@ func ProcessDogAdded(ctx, c *gin.Context) error {
 	return nil
 }
 
-// func deserializeDog(c *gin.Context) (Dog, error) {
-// 	body, err := ioutil.ReadAll(c.Request.Body)
-// 	if err != nil {
-// 		return Dog{}, err
-// 	}
-
-// 	var dog Dog
-// 	err = json.Unmarshal(body, &dog)
-// 	if err != nil {
-// 		return Dog{}, err
-// 	}
-
-// 	return dog, nil
-// }
-
-// TODO break up in succeed and fail
 func Respond(c *gin.Context, code int, obj interface{}) {
 	if code < 300 {
 		if obj == nil {

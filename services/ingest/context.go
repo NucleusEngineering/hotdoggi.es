@@ -10,7 +10,7 @@ import (
 
 // Principal represents the the identity that originally authorized the context of an interaction
 type Principal struct {
-	ID         string `header:"id" firestore:"id" json:"id"`
+	ID         string `header:"id" firestore:"id" json:"user_id"`
 	Email      string `header:"email" firestore:"email" json:"email"`
 	Name       string `header:"name" firestore:"name" json:"name"`
 	PictureURL string `header:"picture" firestore:"picture" json:"picture"`
@@ -30,7 +30,6 @@ func UserContextFromAPI(c *gin.Context) {
 			Name:       "development",
 			PictureURL: "unset",
 		}
-		c.Set("trace.id", "development mode")
 		c.Set("principal", &devCaller)
 		c.Set("principal.email", devCaller.Email)
 		c.Set("principal.id", devCaller.ID)
@@ -38,13 +37,6 @@ func UserContextFromAPI(c *gin.Context) {
 		c.Set("principal.picture", devCaller.PictureURL)
 		c.Next()
 		return
-	}
-
-	// Trace context
-	traceToken := c.GetHeader("X-Cloud-Trace-Context")
-	// TODO check if correct format
-	if traceToken != "" {
-		c.Set("trace.id", traceToken)
 	}
 
 	encoded := c.Request.Header.Get("X-Endpoint-API-UserInfo")

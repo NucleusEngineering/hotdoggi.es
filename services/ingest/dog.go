@@ -33,10 +33,14 @@ func (ref *DogRef) validate(typeName string) error {
 		// TODO implement type validation and return errors
 		return nil
 	case "es.hotdoggi.events.dog_removed":
-		// TODO implement type validation and return errors
+		if ref.ID == "" {
+			return fmt.Errorf("no reference id given for type: %s", typeName)
+		}
 		return nil
 	case "es.hotdoggi.events.dog_updated":
-		// TODO implement type validation and return errors
+		if ref.ID == "" {
+			return fmt.Errorf("no reference id given for type: %s", typeName)
+		}
 		return nil
 	default:
 		return fmt.Errorf("unrecognized type name received: %s", typeName)
