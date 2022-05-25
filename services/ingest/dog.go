@@ -7,16 +7,16 @@ import (
 
 // DogRef is the actual content of the event data besides the calling principal
 type DogRef struct {
-	ID  string `header:"id" json:"id"`
-	Dog Dog    `header:"inline" json:"dog"`
+	ID  string `header:"id" firestore:"id" json:"id"`
+	Dog Dog    `header:"inline" firestore:"dog" json:"dog"`
 }
 
 // Dog data model
 type Dog struct {
-	Name     string `header:"name" json:"name"`
-	Breed    string `header:"breed" json:"breed"`
-	Color    string `header:"color" json:"color"`
-	Birthday string `header:"birthday" json:"birthday"`
+	Name     string `header:"name" firestore:"name" json:"name"`
+	Breed    string `header:"breed" firestore:"breed" json:"breed"`
+	Color    string `header:"color" firestore:"color" json:"color"`
+	Birthday string `header:"birthday" firestore:"birthday" json:"birthday"`
 }
 
 func (ref *DogRef) deserialize(buffer []byte) error {

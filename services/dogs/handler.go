@@ -66,6 +66,7 @@ func ProcessDogAdded(ctx, c *gin.Context) error {
 // 	return dog, nil
 // }
 
+// TODO break up in succeed and fail
 func Respond(c *gin.Context, code int, obj interface{}) {
 	if code < 300 {
 		if obj == nil {

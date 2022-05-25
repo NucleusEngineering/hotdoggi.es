@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 
 	firestore "cloud.google.com/go/firestore"
@@ -13,8 +12,8 @@ import (
 )
 
 type EventData struct {
-	Principal Principal
-	Ref       interface{}
+	Principal Principal `header:"principal" firestore:"principal" json:"principal"`
+	Ref       DogRef    `header:"ref" firestore:"ref" json:"ref"`
 }
 
 // EventHandler implements POSTing events
@@ -42,7 +41,6 @@ func EventHandler(c *gin.Context) {
 func validate(ctx context.Context, c *gin.Context) error {
 	_, span := trace.StartSpan(ctx, "ingest.validate")
 	defer span.End()
-	log.Printf("validating type\n")
 
 	sourceName := c.Param("source")
 	if sourceName == "" {
@@ -60,18 +58,18 @@ func validate(ctx context.Context, c *gin.Context) error {
 	}
 
 	// Assume we are talking about dogs
-	var data *DogRef
-	err = data.deserialize(buffer)
+	var data DogRef
+	err = (&data).deserialize(buffer)
 	if err != nil {
 		return fmt.Errorf("failed deserialize payload: %v", err)
 	}
-	err = data.validate(typeName)
+	err = (&data).validate(typeName)
 	if err != nil {
 		return fmt.Errorf("failed validate payload: %v", err)
 	}
 
 	// Validation OK
-	c.Set("event.data", data)
+	c.Set("event.data", &data)
 	c.Set("event.type", typeName)
 	c.Set("event.source", sourceName)
 
@@ -87,7 +85,7 @@ func commit(ctx context.Context, c *gin.Context) (*firestore.DocumentRef, error)
 	principal := c.MustGet("principal").(*Principal)
 	typeName := c.MustGet("event.type").(string)
 	sourceName := c.MustGet("event.source").(string)
-	data := c.MustGet("event.data").(*interface{})
+	data := c.MustGet("event.data").(*DogRef)
 
 	payload := EventData{
 		Principal: *principal,
@@ -107,10 +105,10 @@ func commit(ctx context.Context, c *gin.Context) (*firestore.DocumentRef, error)
 		return nil, fmt.Errorf("failed to insert event into log: %v", err)
 	}
 
-	log.Printf("commit transaction successful for type: %s\n", typeName)
 	return ref, nil
 }
 
+// TODO break up in succeed and fail
 func Respond(c *gin.Context, code int, obj interface{}) {
 	if code < 300 {
 		if obj == nil {
