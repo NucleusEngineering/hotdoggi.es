@@ -111,7 +111,7 @@ func commit(ctx context.Context, c *gin.Context) (*firestore.DocumentRef, error)
 		"data":            payload,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to insert event into log: %v", err)
+		return nil, fmt.Errorf("failed to insert event: %v", err)
 	}
 
 	return ref, nil

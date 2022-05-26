@@ -33,12 +33,16 @@ func main() {
 func configure(ctx context.Context) {
 	Global = make(map[string]interface{})
 	Global["environment"] = os.Getenv("ENVIRONMENT")
+
+	// Default to prod (safer)
 	if Global["environment"].(string) == "" {
-		Global["environment"] = "dev"
+		Global["environment"] = "prod"
 	}
-	if Global["environment"].(string) == "prod" {
+
+	if Global["environment"] == "prod" {
 		gin.SetMode(gin.ReleaseMode)
 	}
+
 	Global["project.id"] = os.Getenv("GOOGLE_CLOUD_PROJECT")
 	if Global["project.id"] == "" {
 		log.Fatal("failed to read GOOGLE_CLOUD_PROJECT")
