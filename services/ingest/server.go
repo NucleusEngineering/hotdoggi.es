@@ -18,7 +18,7 @@ func main() {
 	ctx := context.Background()
 	configure(ctx)
 
-	exporter := createTraceExporter()
+	exporter := Global["client.trace"].(*stackdriver.Exporter)
 	defer exporter.StopMetricsExporter()
 
 	router := gin.Default()
@@ -44,9 +44,10 @@ func configure(ctx context.Context) {
 		log.Fatal("failed to read GOOGLE_CLOUD_PROJECT")
 	}
 	Global["client.firestore"] = createFirestoreClient(ctx)
+	Global["client.trace"] = createTraceExporter(ctx)
 }
 
-func createTraceExporter() *stackdriver.Exporter {
+func createTraceExporter(ctx context.Context) *stackdriver.Exporter {
 	projectID := Global["project.id"].(string)
 	exporter, err := stackdriver.NewExporter(stackdriver.Options{
 		ProjectID: projectID,

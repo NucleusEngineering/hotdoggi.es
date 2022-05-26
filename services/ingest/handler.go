@@ -24,19 +24,19 @@ func EventHandler(c *gin.Context) {
 
 	err := validate(ctx, c)
 	if err != nil {
-		Respond(c, http.StatusBadRequest, gin.H{
+		c.JSON(http.StatusBadRequest, gin.H{
 			"error": fmt.Sprintf("failed to validate event: %v", err),
 		})
 		return
 	}
 	ref, err := commit(ctx, c)
 	if err != nil {
-		Respond(c, http.StatusInternalServerError, gin.H{
+		c.JSON(http.StatusServiceUnavailable, gin.H{
 			"error": fmt.Sprintf("failed to commit to event log: %v", err),
 		})
 		return
 	}
-	Respond(c, http.StatusCreated, gin.H{
+	c.JSON(http.StatusCreated, gin.H{
 		"message":  "event inserted",
 		"event_id": ref.ID,
 	})
@@ -115,24 +115,4 @@ func commit(ctx context.Context, c *gin.Context) (*firestore.DocumentRef, error)
 	}
 
 	return ref, nil
-}
-
-func Respond(c *gin.Context, code int, obj interface{}) {
-	if code < 300 {
-		if obj == nil {
-			c.Status(code)
-			c.Next()
-			return
-		}
-		c.JSON(code, obj)
-		c.Next() //TODO replace
-		return
-	}
-	if obj == nil {
-		c.Status(code)
-		c.Abort()
-		return
-	}
-	c.JSON(code, obj)
-	c.Abort()
 }

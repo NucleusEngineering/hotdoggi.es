@@ -23,7 +23,7 @@ func UserContextFromAPI(c *gin.Context) {
 	c.Set("trace.context", ctx)
 
 	// Skip verification in non-prod
-	if Global["environment"].(string) != "prod" {
+	if Global["environment"].(string) == "dev" {
 		devCaller := Principal{
 			ID:         "1",
 			Email:      "dev@localhost",
@@ -31,38 +31,32 @@ func UserContextFromAPI(c *gin.Context) {
 			PictureURL: "unset",
 		}
 		c.Set("principal", &devCaller)
-		c.Set("principal.email", devCaller.Email)
-		c.Set("principal.id", devCaller.ID)
-		c.Set("principal.name", devCaller.Name)
-		c.Set("principal.picture", devCaller.PictureURL)
 		c.Next()
 		return
 	}
 
 	encoded := c.Request.Header.Get("X-Endpoint-API-UserInfo")
 	if encoded == "" {
-		Respond(c, http.StatusUnauthorized, "missing gateway user info header")
+		c.JSON(http.StatusUnauthorized, "missing gateway user info header")
+		c.Abort()
 		return
 	}
 	bytes, err := base64.RawURLEncoding.DecodeString(encoded)
 	if err != nil {
-		Respond(c, http.StatusUnauthorized, "failed to decode user info header")
+		c.JSON(http.StatusUnauthorized, "failed to decode user info header")
+		c.Abort()
 		return
 	}
 
 	var apiCaller Principal
 	err = json.Unmarshal(bytes, &apiCaller)
 	if err != nil {
-		Respond(c, http.StatusUnauthorized, "failed to deserialize user info header")
+		c.JSON(http.StatusUnauthorized, "failed to deserialize user info header")
+		c.Abort()
 		return
 	}
 
 	// Context OK
-
 	c.Set("principal", &apiCaller)
-	c.Set("principal.email", apiCaller.Email)
-	c.Set("principal.id", apiCaller.ID)
-	c.Set("principal.name", apiCaller.Name)
-	c.Set("principal.picture", apiCaller.PictureURL)
 	c.Next()
 }
