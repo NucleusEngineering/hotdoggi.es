@@ -13,10 +13,17 @@ type DogRef struct {
 
 // Dog data model
 type Dog struct {
-	Name     string `header:"name" firestore:"name" json:"name"`
-	Breed    string `header:"breed" firestore:"breed" json:"breed"`
-	Color    string `header:"color" firestore:"color" json:"color"`
-	Birthday string `header:"birthday" firestore:"birthday" json:"birthday"`
+	Name     string   `header:"name" firestore:"name" json:"name"`
+	Breed    string   `header:"breed" firestore:"breed" json:"breed"`
+	Color    string   `header:"color" firestore:"color" json:"color"`
+	Birthday string   `header:"birthday" firestore:"birthday" json:"birthday"`
+	Location Location `header:"inline" firestore:"location" json:"location"`
+}
+
+// Location data model
+type Location struct {
+	Latitude  float32 `header:"latitude" firestore:"latitude" json:"latitude"`
+	Longitude float32 `header:"longitude" firestore:"longitude" json:"longitude"`
 }
 
 func (ref *DogRef) deserialize(buffer []byte) error {
@@ -40,6 +47,14 @@ func (ref *DogRef) validate(typeName string) error {
 	case "es.hotdoggi.events.dog_updated":
 		if ref.ID == "" {
 			return fmt.Errorf("no reference id given for type: %s", typeName)
+		}
+		return nil
+	case "es.hotdoggi.events.dog_moved":
+		if ref.ID == "" {
+			return fmt.Errorf("no reference id given for type: %s", typeName)
+		}
+		if ref.Dog.Location.Latitude == 0.0 || ref.Dog.Location.Longitude == 0.0 {
+			return fmt.Errorf("no positional coordinates give for : %s", typeName)
 		}
 		return nil
 	default:

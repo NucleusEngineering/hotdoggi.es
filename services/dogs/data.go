@@ -25,7 +25,14 @@ type Dog struct {
 	Breed    string   `header:"breed" firestore:"breed" json:"breed"`
 	Color    string   `header:"color" firestore:"color" json:"color"`
 	Birthday string   `header:"birthday" firestore:"birthday" json:"birthday"`
+	Location Location `header:"inline" firestore:"location" json:"location"`
 	Metadata Metadata `header:"inline" firestore:"metadata" json:"metadata"`
+}
+
+// Location data model
+type Location struct {
+	Latitude  float32 `header:"latitude" firestore:"latitude" json:"latitude"`
+	Longitude float32 `header:"longitude" firestore:"longitude" json:"longitude"`
 }
 
 // Metadata data model

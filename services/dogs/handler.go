@@ -81,6 +81,14 @@ func EventHandler(c *gin.Context) {
 			})
 		}
 		c.Status(http.StatusAccepted)
+	case "es.hotdoggi.events.dog_moved":
+		err := dogUpdated(ctx, c, caller, ref)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": fmt.Sprintf("failed to move dog: %v", err),
+			})
+		}
+		c.Status(http.StatusAccepted)
 	default:
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": fmt.Sprintf("unknown event type received: %v", typeName),
@@ -123,5 +131,23 @@ func dogUpdated(ctx context.Context, c *gin.Context, caller *Principal, ref *Dog
 		return fmt.Errorf("refusing to update dog. Dog not owned by caller")
 	}
 	_, err = Update(ctx, ref.ID, ref.Dog)
+	return err
+}
+
+func dogMoved(ctx context.Context, c *gin.Context, caller *Principal, id string, lat float32, long float32) error {
+	ctx, span := trace.StartSpan(ctx, "dogs.handler.event.updated")
+	defer span.End()
+	existing, err := Get(ctx, id)
+	if err != nil {
+		return err
+	}
+	if existing.Dog.Metadata.Owner != caller.ID {
+		return fmt.Errorf("refusing to move dog. Dog not owned by caller")
+	}
+
+	existing.Dog.Location.Latitude = lat
+	existing.Dog.Location.Longitude = long
+
+	_, err = Update(ctx, id, existing.Dog)
 	return err
 }
