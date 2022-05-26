@@ -17,12 +17,12 @@ func ListHandler(c *gin.Context) {
 
 	result, err := List(ctx, c)
 	if err != nil {
-		Respond(c, http.StatusInternalServerError, gin.H{
+		c.JSON(http.StatusServiceUnavailable, gin.H{
 			"error": fmt.Sprintf("failed to retrieve objects: %v", err),
 		})
 		return
 	}
-	Respond(c, http.StatusOK, result)
+	c.JSON(http.StatusOK, result)
 }
 
 // GetHandler implements GET /{key}
@@ -34,12 +34,12 @@ func GetHandler(c *gin.Context) {
 	key := c.Param("key")
 	result, err := Get(ctx, c, key)
 	if err != nil {
-		Respond(c, http.StatusInternalServerError, gin.H{
+		c.JSON(http.StatusServiceUnavailable, gin.H{
 			"error": fmt.Sprintf("failed to retrieve object: %v", err),
 		})
 		return
 	}
-	Respond(c, http.StatusOK, result)
+	c.JSON(http.StatusOK, result)
 }
 
 // EventHandler implements POST /
@@ -49,28 +49,4 @@ func EventHandler(c *gin.Context) {
 	defer span.End()
 
 	// TODO implement
-}
-
-func ProcessDogAdded(ctx, c *gin.Context) error {
-	return nil
-}
-
-func Respond(c *gin.Context, code int, obj interface{}) {
-	if code < 300 {
-		if obj == nil {
-			c.Status(code)
-			c.Next()
-			return
-		}
-		c.JSON(code, obj)
-		c.Next() //TODO replace
-		return
-	}
-	if obj == nil {
-		c.Status(code)
-		c.Abort()
-		return
-	}
-	c.JSON(code, obj)
-	c.Abort()
 }

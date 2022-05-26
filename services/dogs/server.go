@@ -23,7 +23,7 @@ func main() {
 	ctx := context.Background()
 	configure(ctx)
 
-	exporter := createTraceExporter()
+	exporter := Global["client.trace"].(*stackdriver.Exporter)
 	defer exporter.StopMetricsExporter()
 
 	router := gin.Default()
@@ -46,12 +46,16 @@ func main() {
 func configure(ctx context.Context) {
 	Global = make(map[string]interface{})
 	Global["environment"] = os.Getenv("ENVIRONMENT")
+
+	// Default to prod (safer)
 	if Global["environment"].(string) == "" {
-		Global["environment"] = "dev"
+		Global["environment"] = "prod"
 	}
-	if Global["environment"].(string) == "prod" {
+
+	if Global["environment"] == "prod" {
 		gin.SetMode(gin.ReleaseMode)
 	}
+
 	Global["project.id"] = os.Getenv("GOOGLE_CLOUD_PROJECT")
 	if Global["project.id"] == "" {
 		log.Fatal("failed to read GOOGLE_CLOUD_PROJECT")
@@ -59,9 +63,10 @@ func configure(ctx context.Context) {
 	Global["client.http"] = createHTTPClient(ctx)
 	Global["client.firebase"] = createFirebaseClient(ctx)
 	Global["client.firestore"] = createFirestoreClient(ctx)
+	Global["client.trace"] = createTraceExporter(ctx)
 }
 
-func createTraceExporter() *stackdriver.Exporter {
+func createTraceExporter(ctx context.Context) *stackdriver.Exporter {
 	projectID := Global["project.id"].(string)
 	exporter, err := stackdriver.NewExporter(stackdriver.Options{
 		ProjectID: projectID,
