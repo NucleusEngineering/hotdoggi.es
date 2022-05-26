@@ -5,7 +5,6 @@ import (
 	"time"
 
 	firestore "cloud.google.com/go/firestore"
-	gin "github.com/gin-gonic/gin"
 	trace "go.opencensus.io/trace"
 	iterator "google.golang.org/api/iterator"
 )
@@ -36,8 +35,8 @@ type Metadata struct {
 }
 
 // List all dogs
-func List(ctx context.Context, c *gin.Context) ([]DogRef, error) {
-	_, span := trace.StartSpan(ctx, "dogs.data.list")
+func List(ctx context.Context) ([]DogRef, error) {
+	ctx, span := trace.StartSpan(ctx, "dogs.data.list")
 	defer span.End()
 	result := []DogRef{}
 	client := Global["client.firestore"].(*firestore.Client)
@@ -62,7 +61,7 @@ func List(ctx context.Context, c *gin.Context) ([]DogRef, error) {
 }
 
 // Get a specific dog
-func Get(ctx context.Context, c *gin.Context, key string) (DogRef, error) {
+func Get(ctx context.Context, key string) (DogRef, error) {
 	ctx, span := trace.StartSpan(ctx, "dogs.data.get")
 	defer span.End()
 	client := Global["client.firestore"].(*firestore.Client)
@@ -79,7 +78,7 @@ func Get(ctx context.Context, c *gin.Context, key string) (DogRef, error) {
 }
 
 // Add a specific dog
-func Add(ctx context.Context, c *gin.Context, dog Dog) (DogRef, error) {
+func Add(ctx context.Context, dog Dog) (DogRef, error) {
 	ctx, span := trace.StartSpan(ctx, "dogs.data.add")
 	defer span.End()
 	client := Global["client.firestore"].(*firestore.Client)
@@ -97,7 +96,7 @@ func Add(ctx context.Context, c *gin.Context, dog Dog) (DogRef, error) {
 }
 
 // Update a specific dog
-func Update(ctx context.Context, c *gin.Context, key string, dog Dog) (DogRef, error) {
+func Update(ctx context.Context, key string, dog Dog) (DogRef, error) {
 	ctx, span := trace.StartSpan(ctx, "dogs.data.update")
 	defer span.End()
 	client := Global["client.firestore"].(*firestore.Client)
@@ -115,7 +114,7 @@ func Update(ctx context.Context, c *gin.Context, key string, dog Dog) (DogRef, e
 }
 
 // Delete a specific dog
-func Delete(ctx context.Context, c *gin.Context, key string) error {
+func Delete(ctx context.Context, key string) error {
 	ctx, span := trace.StartSpan(ctx, "dogs.data.delete")
 	defer span.End()
 	client := Global["client.firestore"].(*firestore.Client)

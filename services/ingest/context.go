@@ -17,20 +17,20 @@ type Principal struct {
 }
 
 // UserContextFromAPI implements a middleware that resolves embedded user context info
-// passed in from the firebase authentication at the service proxy layer.
+// passed in from firebase authentication at the service proxy layer.
 func UserContextFromAPI(c *gin.Context) {
 	ctx := c.Request.Context()
 	c.Set("trace.context", ctx)
 
 	// Skip verification in non-prod
 	if Global["environment"].(string) == "dev" {
-		devCaller := Principal{
+		caller := Principal{
 			ID:         "1",
 			Email:      "dev@localhost",
 			Name:       "development",
 			PictureURL: "unset",
 		}
-		c.Set("principal", &devCaller)
+		c.Set("principal", &caller)
 		c.Next()
 		return
 	}
@@ -48,8 +48,8 @@ func UserContextFromAPI(c *gin.Context) {
 		return
 	}
 
-	var apiCaller Principal
-	err = json.Unmarshal(bytes, &apiCaller)
+	var caller Principal
+	err = json.Unmarshal(bytes, &caller)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, "failed to deserialize user info header")
 		c.Abort()
@@ -57,6 +57,6 @@ func UserContextFromAPI(c *gin.Context) {
 	}
 
 	// Context OK
-	c.Set("principal", &apiCaller)
+	c.Set("principal", &caller)
 	c.Next()
 }

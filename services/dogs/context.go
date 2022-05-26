@@ -3,8 +3,11 @@ package main
 import (
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
+	"io/ioutil"
 	"net/http"
 
+	cloudevents "github.com/cloudevents/sdk-go/v2"
 	gin "github.com/gin-gonic/gin"
 )
 
@@ -17,20 +20,20 @@ type Principal struct {
 }
 
 // UserContextFromAPI implements a middleware that resolves embedded user context info
-// passed in from the firebase authentication at the service proxy layer.
+// passed in from firebase authentication at the service proxy layer.
 func UserContextFromAPI(c *gin.Context) {
 	ctx := c.Request.Context()
 	c.Set("trace.context", ctx)
 
 	// Skip verification in non-prod
 	if Global["environment"].(string) == "dev" {
-		devCaller := Principal{
+		caller := Principal{
 			ID:         "1",
 			Email:      "dev@localhost",
 			Name:       "development",
 			PictureURL: "unset",
 		}
-		c.Set("principal", &devCaller)
+		c.Set("principal", &caller)
 		c.Next()
 		return
 	}
@@ -48,8 +51,8 @@ func UserContextFromAPI(c *gin.Context) {
 		return
 	}
 
-	var apiCaller Principal
-	err = json.Unmarshal(bytes, &apiCaller)
+	var caller Principal
+	err = json.Unmarshal(bytes, &caller)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, "failed to deserialize user info header")
 		c.Abort()
@@ -57,29 +60,45 @@ func UserContextFromAPI(c *gin.Context) {
 	}
 
 	// Context OK
-	c.Set("principal", &apiCaller)
+	c.Set("principal", &caller)
 	c.Next()
 }
 
-// UserContextFromEVENT implements a middleware that resolves embedded user context info
-// passed in from the embedded event data.
+// UserContextFromEvent implements a middleware that resolves embedded user context info
+// passed in from the event data.
 func ContextFromEvent(c *gin.Context) {
 	ctx := c.Request.Context()
 	c.Set("trace.context", ctx)
 
-	// Skip verification in non-prod
-	if Global["environment"].(string) != "prod" {
-		c.Next()
+	buffer, err := ioutil.ReadAll(c.Request.Body)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, fmt.Errorf("failed to read POST payload: %v", err))
+		c.Abort()
 		return
 	}
 
-	// TODO build context injection
-	c.Set("event.data", "uninjected ref object")
+	event := cloudevents.NewEvent()
+	err = json.Unmarshal(buffer, &event)
+	if err != nil {
+		c.JSON(http.StatusNotAcceptable, fmt.Errorf("failed to deserialize payload: %v", err))
+		c.Abort()
+		return
+	}
 
-	// Trace context
-	c.Set("trace.id", "uninjected")
+	c.Set("event.type", event.Context.GetType())
+	c.Set("event.source", event.Context.GetSource())
 
-	// Verification OK
-	c.Set("principal", "uninjected pointer")
+	var data EventData
+	err = json.Unmarshal(event.DataEncoded, &data)
+	if err != nil {
+		c.JSON(http.StatusNotAcceptable, fmt.Errorf("failed to deserialize resources: %v", err))
+		c.Abort()
+		return
+	}
+
+	c.Set("event.data", &data.Ref)
+
+	// Context OK
+	c.Set("principal", &data.Principal)
 	c.Next()
 }
