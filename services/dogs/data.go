@@ -35,12 +35,13 @@ type DogRef struct {
 
 // Dog data model
 type Dog struct {
-	Name     string   `header:"name" firestore:"name" json:"name"`
-	Breed    string   `header:"breed" firestore:"breed" json:"breed"`
-	Color    string   `header:"color" firestore:"color" json:"color"`
-	Birthday string   `header:"birthday" firestore:"birthday" json:"birthday"`
-	Location Location `header:"inline" firestore:"location" json:"location"`
-	Metadata Metadata `header:"inline" firestore:"metadata" json:"metadata"`
+	Name       string   `header:"name" firestore:"name" json:"name"`
+	Breed      string   `header:"breed" firestore:"breed" json:"breed"`
+	Color      string   `header:"color" firestore:"color" json:"color"`
+	Birthday   string   `header:"birthday" firestore:"birthday" json:"birthday"`
+	PictureURL string   `header:"picture" firestore:"picture" json:"picture"`
+	Location   Location `header:"inline" firestore:"location" json:"location"`
+	Metadata   Metadata `header:"inline" firestore:"metadata" json:"metadata"`
 }
 
 // Location data model

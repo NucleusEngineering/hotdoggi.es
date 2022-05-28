@@ -27,6 +27,7 @@ def load(event):
                     "breed": randomBreed(),
                     "birthday": randomBirthday(),
                     "color": randomColor(),
+                    "picture": "https://i1.sndcdn.com/artworks-UWJlJnEMrYzN2Vqx-1ImGMw-t500x500.jpg"
                 }
             }
         else:
