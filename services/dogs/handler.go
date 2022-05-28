@@ -77,7 +77,7 @@ func EventHandler(c *gin.Context) {
 		}
 		c.Status(http.StatusAccepted)
 	case "es.hotdoggi.events.dog_moved":
-		err := dogUpdated(ctx, c, caller, ref)
+		err := dogMoved(ctx, c, caller, ref, ref.Dog.Location.Latitude, ref.Dog.Location.Longitude)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"error": fmt.Sprintf("failed to move dog: %v", err),
@@ -129,10 +129,10 @@ func dogUpdated(ctx context.Context, c *gin.Context, caller *Principal, ref *Dog
 	return err
 }
 
-func dogMoved(ctx context.Context, c *gin.Context, caller *Principal, id string, lat float32, long float32) error {
+func dogMoved(ctx context.Context, c *gin.Context, caller *Principal, ref *DogRef, lat float32, long float32) error {
 	ctx, span := trace.StartSpan(ctx, "dogs.handler.event.updated")
 	defer span.End()
-	existing, err := Get(ctx, id)
+	existing, err := Get(ctx, ref.ID)
 	if err != nil {
 		return err
 	}
@@ -143,6 +143,6 @@ func dogMoved(ctx context.Context, c *gin.Context, caller *Principal, id string,
 	existing.Dog.Location.Latitude = lat
 	existing.Dog.Location.Longitude = long
 
-	_, err = Update(ctx, id, existing.Dog)
+	_, err = Update(ctx, ref.ID, existing.Dog)
 	return err
 }
