@@ -9,11 +9,6 @@ import (
 	trace "go.opencensus.io/trace"
 )
 
-type EventData struct {
-	Principal Principal `header:"principal" firestore:"principal" json:"principal"`
-	Ref       DogRef    `header:"ref" firestore:"ref" json:"ref"`
-}
-
 // ListHandler implements GET /
 func ListHandler(c *gin.Context) {
 	ctx := c.MustGet("trace.context").(context.Context)

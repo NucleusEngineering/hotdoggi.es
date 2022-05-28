@@ -11,10 +11,6 @@ import (
 	trace "go.opencensus.io/trace"
 )
 
-type EventData struct {
-	Principal Principal `header:"principal" firestore:"principal" json:"principal"`
-	Ref       DogRef    `header:"ref" firestore:"ref" json:"ref"`
-}
 
 // EventHandler implements POSTing events
 func EventHandler(c *gin.Context) {

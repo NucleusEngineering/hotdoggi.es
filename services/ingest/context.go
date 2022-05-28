@@ -8,13 +8,7 @@ import (
 	gin "github.com/gin-gonic/gin"
 )
 
-// Principal represents the the identity that originally authorized the context of an interaction
-type Principal struct {
-	ID         string `header:"id" firestore:"id" json:"user_id"`
-	Email      string `header:"email" firestore:"email" json:"email"`
-	Name       string `header:"name" firestore:"name" json:"name"`
-	PictureURL string `header:"picture" firestore:"picture" json:"picture"`
-}
+
 
 // UserContextFromAPI implements a middleware that resolves embedded user context info
 // passed in from firebase authentication at the service proxy layer.

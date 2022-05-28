@@ -5,6 +5,20 @@ import (
 	"fmt"
 )
 
+// Event Data is the actual event 'data' payload
+type EventData struct {
+	Principal Principal `header:"principal" firestore:"principal" json:"principal"`
+	Ref       DogRef    `header:"ref" firestore:"ref" json:"ref"`
+}
+
+// Principal represents the the identity that originally authorized the context of an interaction
+type Principal struct {
+	ID         string `header:"id" firestore:"id" json:"user_id"`
+	Email      string `header:"email" firestore:"email" json:"email"`
+	Name       string `header:"name" firestore:"name" json:"name"`
+	PictureURL string `header:"picture" firestore:"picture" json:"picture"`
+}
+
 // DogRef is the actual content of the event data besides the calling principal
 type DogRef struct {
 	ID  string `header:"id" firestore:"id" json:"id"`
