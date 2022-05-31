@@ -85,6 +85,10 @@ resource "google_pubsub_subscription" "dogs" {
       service_account_email = google_service_account.pubsub-pusher.email
     }
   }
+  dead_letter_policy {
+    dead_letter_topic = google_pubsub_topic.dead-letter.id
+    max_delivery_attempts = 5
+  }
 }
 
 resource "google_cloudbuild_trigger" "dogs" {

@@ -105,8 +105,10 @@ func ContextFromEvent(c *gin.Context) {
 	}
 
 	c.Set("event.data", &data.Ref)
+	c.Set("principal", &data.Principal)
+
+	log.Printf("received event %s of type %s from source %s in context of user %s", event.ID(), event.Source(), event.Source(), data.Principal.Email)
 
 	// Context OK
-	c.Set("principal", &data.Principal)
 	c.Next()
 }

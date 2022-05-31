@@ -53,7 +53,8 @@ func UserContextFromAPI(c *gin.Context) {
 		return
 	}
 
-	// Context OK
 	c.Set("principal", &caller)
+
+	// Context OK
 	c.Next()
 }

@@ -3,10 +3,9 @@ resource "google_pubsub_topic" "topic" {
   name    = "${local.prefix}-stream"
 }
 
-resource "google_pubsub_subscription" "subscription" {
+resource "google_pubsub_topic" "dead-letter" {
   project = local.project
-  name    = "${local.prefix}-default-pull"
-  topic   = google_pubsub_topic.topic.name
+  name    = "${local.prefix}-dead-letters"
 }
 
 resource "google_project_iam_member" "pubsub-sa-tokencreator" {

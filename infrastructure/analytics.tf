@@ -66,6 +66,23 @@ resource "google_cloud_run_service_iam_member" "analytics" {
   member   = "serviceAccount:${google_service_account.pubsub-pusher.email}"
 }
 
+resource "google_pubsub_subscription" "analytics" {
+  project = local.project
+  name    = "${local.prefix}-analytics-push"
+  topic   = google_pubsub_topic.topic.name
+  filter  = ""
+  push_config {
+    push_endpoint = "${google_cloud_run_service.analytics.status[0].url}/events/"
+    oidc_token {
+      service_account_email = google_service_account.pubsub-pusher.email
+    }
+  }
+  dead_letter_policy {
+    dead_letter_topic = google_pubsub_topic.dead-letter.id
+    max_delivery_attempts = 5
+  }
+}
+
 resource "google_cloudbuild_trigger" "analytics" {
   project  = local.project
   provider = google-beta
@@ -107,19 +124,6 @@ resource "google_bigquery_dataset" "dataset" {
   access {
     role          = "OWNER"
     user_by_email = local.user
-  }
-}
-
-resource "google_pubsub_subscription" "analytics" {
-  project = local.project
-  name    = "${local.prefix}-analytics-push"
-  topic   = google_pubsub_topic.topic.name
-  filter  = ""
-  push_config {
-    push_endpoint = "${google_cloud_run_service.analytics.status[0].url}/events/"
-    oidc_token {
-      service_account_email = google_service_account.pubsub-pusher.email
-    }
   }
 }
 

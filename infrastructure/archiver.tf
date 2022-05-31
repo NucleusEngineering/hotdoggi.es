@@ -58,7 +58,7 @@ resource "google_cloud_run_service" "archiver" {
   }
 }
 
-resource "google_cloud_run_service_iam_member" "archiver-users" {
+resource "google_cloud_run_service_iam_member" "archiver" {
   project  = local.project
   location = local.region
   service  = google_cloud_run_service.archiver.name
@@ -76,6 +76,10 @@ resource "google_pubsub_subscription" "archiver" {
     oidc_token {
       service_account_email = google_service_account.pubsub-pusher.email
     }
+  }
+  dead_letter_policy {
+    dead_letter_topic = google_pubsub_topic.dead-letter.id
+    max_delivery_attempts = 5
   }
 }
 
