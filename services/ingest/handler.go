@@ -4,13 +4,13 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 
 	firestore "cloud.google.com/go/firestore"
 	gin "github.com/gin-gonic/gin"
 	trace "go.opencensus.io/trace"
 )
-
 
 // EventHandler implements POSTing events
 func EventHandler(c *gin.Context) {
@@ -20,6 +20,7 @@ func EventHandler(c *gin.Context) {
 
 	err := validate(ctx, c)
 	if err != nil {
+		log.Printf("error: %v\n", err)
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": fmt.Sprintf("failed to validate event: %v", err),
 		})
@@ -27,6 +28,7 @@ func EventHandler(c *gin.Context) {
 	}
 	ref, err := commit(ctx, c)
 	if err != nil {
+		log.Printf("error: %v\n", err)
 		c.JSON(http.StatusServiceUnavailable, gin.H{
 			"error": fmt.Sprintf("failed to commit to event log: %v", err),
 		})

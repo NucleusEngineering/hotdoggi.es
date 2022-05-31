@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 	"net/http"
 
 	gin "github.com/gin-gonic/gin"
@@ -17,6 +18,7 @@ func ListHandler(c *gin.Context) {
 
 	result, err := List(ctx)
 	if err != nil {
+		log.Printf("error: %v\n", err)
 		c.JSON(http.StatusServiceUnavailable, gin.H{
 			"error": fmt.Sprintf("failed to retrieve objects: %v", err),
 		})
@@ -34,6 +36,7 @@ func GetHandler(c *gin.Context) {
 	key := c.Param("key")
 	result, err := Get(ctx, key)
 	if err != nil {
+		log.Printf("error: %v\n", err)
 		c.JSON(http.StatusServiceUnavailable, gin.H{
 			"error": fmt.Sprintf("failed to retrieve object: %v", err),
 		})
@@ -55,6 +58,7 @@ func EventHandler(c *gin.Context) {
 	case "es.hotdoggi.events.dog_added":
 		err := dogAdded(ctx, c, caller, ref)
 		if err != nil {
+			log.Printf("error: %v\n", err)
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"error": fmt.Sprintf("failed to add dog: %v", err),
 			})
@@ -63,6 +67,7 @@ func EventHandler(c *gin.Context) {
 	case "es.hotdoggi.events.dog_removed":
 		err := dogRemoved(ctx, c, caller, ref)
 		if err != nil {
+			log.Printf("error: %v\n", err)
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"error": fmt.Sprintf("failed to remove dog: %v", err),
 			})
@@ -71,6 +76,7 @@ func EventHandler(c *gin.Context) {
 	case "es.hotdoggi.events.dog_updated":
 		err := dogUpdated(ctx, c, caller, ref)
 		if err != nil {
+			log.Printf("error: %v\n", err)
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"error": fmt.Sprintf("failed to update dog: %v", err),
 			})
@@ -79,6 +85,7 @@ func EventHandler(c *gin.Context) {
 	case "es.hotdoggi.events.dog_moved":
 		err := dogMoved(ctx, c, caller, ref, ref.Dog.Location.Latitude, ref.Dog.Location.Longitude)
 		if err != nil {
+			log.Printf("error: %v\n", err)
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"error": fmt.Sprintf("failed to move dog: %v", err),
 			})

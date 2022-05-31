@@ -81,7 +81,7 @@ func ContextFromEvent(c *gin.Context) {
 	c.Set("event.source", event.Context.GetSource())
 
 	var data EventData
-	err = json.Unmarshal(event.DataEncoded, &data)
+	err = json.Unmarshal(event.Data(), &data)
 	if err != nil {
 		c.JSON(http.StatusNotAcceptable, fmt.Errorf("failed to deserialize resources: %v", err))
 		c.Abort()
