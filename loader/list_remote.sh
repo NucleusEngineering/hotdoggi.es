@@ -2,4 +2,4 @@
 
 curl -X GET \
     -H "Authorization: Bearer ${TOKEN}" \
-    "https://api.hotdoggies.stamer.demo.altostrat.com/dogs/"
+    "https://api.hotdoggies.stamer.demo.altostrat.com/dogs/123123"

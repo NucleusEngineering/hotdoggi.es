@@ -98,12 +98,13 @@ func EventHandler(c *gin.Context) {
 	}
 }
 
-func dogAdded(ctx context.Context, c *gin.Context, caller *Principal, ref *DogRef) error {
+func dogAdded(ctx context.Context, c *gin.Context, caller *Principal, dog Dog) error {
 	ctx, span := trace.StartSpan(ctx, "dogs.handler.event.added")
 	defer span.End()
 
-	ref.Dog.Metadata.Owner = caller.ID
-	_, err := Add(ctx, ref.Dog)
+	dog.Metadata.Owner = caller.ID
+
+	_, err := Add(ctx, dog)
 	return err
 }
 
