@@ -4,7 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 
@@ -66,7 +66,7 @@ func ContextFromEvent(c *gin.Context) {
 	ctx := c.Request.Context()
 	c.Set("trace.context", ctx)
 
-	buffer, err := ioutil.ReadAll(c.Request.Body)
+	buffer, err := io.ReadAll(c.Request.Body)
 	if err != nil {
 		log.Printf("error: %v\n", err)
 		c.JSON(http.StatusBadRequest, fmt.Errorf("failed to read POST payload: %v", err))
@@ -107,7 +107,7 @@ func ContextFromEvent(c *gin.Context) {
 	c.Set("event.data", &data.Ref)
 	c.Set("principal", &data.Principal)
 
-	log.Printf("received event %s of type %s from source %s in context of user %s", event.ID(), event.Source(), event.Source(), data.Principal.Email)
+	log.Printf("received event %s of type %s from source %s in context of user %s", event.ID(), event.Type(), event.Source(), data.Principal.Email)
 
 	// Context OK
 	c.Next()
