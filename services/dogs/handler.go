@@ -56,7 +56,7 @@ func EventHandler(c *gin.Context) {
 	ref := c.MustGet("event.data").(*DogRef)
 	switch typeName {
 	case "es.hotdoggi.events.dog_added":
-		err := dogAdded(ctx, c, caller, ref)
+		err := dogAdded(ctx, c, caller, ref.Dog)
 		if err != nil {
 			log.Printf("error: %v\n", err)
 			c.JSON(http.StatusInternalServerError, gin.H{
