@@ -3,12 +3,12 @@ package main
 import (
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
+	"log"
 	"net/http"
 
 	gin "github.com/gin-gonic/gin"
 )
-
-
 
 // UserContextFromAPI implements a middleware that resolves embedded user context info
 // passed in from firebase authentication at the service proxy layer.
@@ -31,12 +31,14 @@ func UserContextFromAPI(c *gin.Context) {
 
 	encoded := c.Request.Header.Get("X-Endpoint-API-UserInfo")
 	if encoded == "" {
+		log.Printf("error: %v\n", fmt.Errorf("missing gateway user info header"))
 		c.JSON(http.StatusUnauthorized, "missing gateway user info header")
 		c.Abort()
 		return
 	}
 	bytes, err := base64.RawURLEncoding.DecodeString(encoded)
 	if err != nil {
+		log.Printf("error: %v\n", err)
 		c.JSON(http.StatusUnauthorized, "failed to decode user info header")
 		c.Abort()
 		return
@@ -45,6 +47,7 @@ func UserContextFromAPI(c *gin.Context) {
 	var caller Principal
 	err = json.Unmarshal(bytes, &caller)
 	if err != nil {
+		log.Printf("error: %v\n", err)
 		c.JSON(http.StatusUnauthorized, "failed to deserialize user info header")
 		c.Abort()
 		return

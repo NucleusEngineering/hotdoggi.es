@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 
 	cloudevents "github.com/cloudevents/sdk-go/v2"
@@ -32,12 +33,14 @@ func UserContextFromAPI(c *gin.Context) {
 
 	encoded := c.Request.Header.Get("X-Endpoint-API-UserInfo")
 	if encoded == "" {
+		log.Printf("error: %v\n", fmt.Errorf("missing gateway user info header"))
 		c.JSON(http.StatusUnauthorized, "missing gateway user info header")
 		c.Abort()
 		return
 	}
 	bytes, err := base64.RawURLEncoding.DecodeString(encoded)
 	if err != nil {
+		log.Printf("error: %v\n", err)
 		c.JSON(http.StatusUnauthorized, "failed to decode user info header")
 		c.Abort()
 		return
@@ -46,6 +49,7 @@ func UserContextFromAPI(c *gin.Context) {
 	var caller Principal
 	err = json.Unmarshal(bytes, &caller)
 	if err != nil {
+		log.Printf("error: %v\n", err)
 		c.JSON(http.StatusUnauthorized, "failed to deserialize user info header")
 		c.Abort()
 		return
@@ -64,15 +68,26 @@ func ContextFromEvent(c *gin.Context) {
 
 	buffer, err := ioutil.ReadAll(c.Request.Body)
 	if err != nil {
+		log.Printf("error: %v\n", err)
 		c.JSON(http.StatusBadRequest, fmt.Errorf("failed to read POST payload: %v", err))
 		c.Abort()
 		return
 	}
 
-	event := cloudevents.NewEvent()
-	err = json.Unmarshal(buffer, &event)
+	var psMessage PubSubMessage
+	err = json.Unmarshal(buffer, &psMessage)
 	if err != nil {
-		c.JSON(http.StatusNotAcceptable, fmt.Errorf("failed to deserialize payload: %v", err))
+		log.Printf("error: %v\n", err)
+		c.JSON(http.StatusBadRequest, fmt.Errorf("failed deserialize Pub/Sub envelope: %v", err))
+		c.Abort()
+		return
+	}
+
+	event := cloudevents.NewEvent()
+	err = json.Unmarshal(psMessage.Message.Data, &event)
+	if err != nil {
+		log.Printf("error: %v\n", err)
+		c.JSON(http.StatusNotAcceptable, fmt.Errorf("failed to deserialize CloudEvent payload: %v", err))
 		c.Abort()
 		return
 	}
@@ -83,6 +98,7 @@ func ContextFromEvent(c *gin.Context) {
 	var data EventData
 	err = json.Unmarshal(event.Data(), &data)
 	if err != nil {
+		log.Printf("error: %v\n", err)
 		c.JSON(http.StatusNotAcceptable, fmt.Errorf("failed to deserialize resources: %v", err))
 		c.Abort()
 		return

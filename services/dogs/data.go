@@ -13,6 +13,15 @@ const (
 	collectionName = "es.hotdoggi.data.dogs"
 )
 
+// PubSubMessage is the data envelope used by pub/sub push subscriptions
+type PubSubMessage struct {
+	Message struct {
+		Data []byte `json:"data,omitempty"`
+		ID   string `json:"id"`
+	} `json:"message"`
+	Subscription string `json:"subscription"`
+}
+
 // Event Data is the actual event 'data' payload
 type EventData struct {
 	Principal Principal `header:"principal" firestore:"principal" json:"principal"`
