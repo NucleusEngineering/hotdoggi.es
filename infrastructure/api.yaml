@@ -41,7 +41,7 @@ paths:
         protocol: h2
         path_translation: APPEND_PATH_TO_ADDRESS
       responses:
-        '200':
+        '201':
           description: A successful response
           schema:
             type: string
