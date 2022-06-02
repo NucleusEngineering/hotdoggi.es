@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 
@@ -54,7 +54,7 @@ func validate(ctx context.Context, c *gin.Context) error {
 		return fmt.Errorf("no type name supplied")
 	}
 
-	buffer, err := ioutil.ReadAll(c.Request.Body)
+	buffer, err := io.ReadAll(c.Request.Body)
 	if err != nil {
 		return fmt.Errorf("failed read body payload: %v", err)
 	}
