@@ -6,22 +6,21 @@ resource "google_dns_managed_zone" "zone" {
   description = "Hotdoggies root zone"
 }
 
-resource "google_dns_record_set" "proxy-cname" {
+resource "google_dns_record_set" "lb-a-app" {
   project     = local.project
   provider    = google-beta
-  name         = "api.${google_dns_managed_zone.zone.dns_name}"
+  name         = "${local.domain}."
   managed_zone = google_dns_managed_zone.zone.name
-  type         = "CNAME"
+  type         = "A"
   ttl          = 300
-  rrdatas      = ["ghs.googlehosted.com."]
+  rrdatas      = [google_compute_global_forwarding_rule.frontend.ip_address]
 }
-
-resource "google_dns_record_set" "app-cname" {
+resource "google_dns_record_set" "lb-a-api" {
   project     = local.project
   provider    = google-beta
-  name         = "app.${google_dns_managed_zone.zone.dns_name}"
+  name         = "api.${local.domain}."
   managed_zone = google_dns_managed_zone.zone.name
-  type         = "CNAME"
+  type         = "A"
   ttl          = 300
-  rrdatas      = ["ghs.googlehosted.com."]
+  rrdatas      = [google_compute_global_forwarding_rule.frontend.ip_address]
 }

@@ -52,6 +52,11 @@ resource "google_cloud_run_service" "dogs" {
       }
     }
   }
+  metadata {
+    annotations = {
+      "run.googleapis.com/ingress" = "internal-and-cloud-load-balancing"
+    }
+  }
   traffic {
     percent         = 100
     latest_revision = true

@@ -6,9 +6,6 @@ deploy:
 destroy:
 	make -C infrastructure destroy
 
-app:
-	make -C services/app compile build clean
-
 proxy:
 	make -C services/proxy build
 
@@ -33,4 +30,4 @@ load:
 
 services: dogs
 
-.PHONY: static deploy destroy app proxy services dogs analytics archiver ingest trigger
+.PHONY: static deploy destroy proxy services dogs analytics archiver ingest trigger

@@ -1,0 +1,13 @@
+steps:
+- name: 'gcr.io/cloud-builders/npm'
+  args: ['install', '--prefix', 'app/spa/']
+- name: 'gcr.io/cloud-builders/yarn'
+  args: ['--cwd', 'app/spa/', 'build']
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  entrypoint: 'bash'
+  args:
+  - '-eEuo'
+  - 'pipefail'
+  - '-c'
+  - |-
+    gsutil rsync -d -r app/spa/build gs://$_BUCKET
