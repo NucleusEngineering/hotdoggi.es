@@ -15,13 +15,15 @@ endpoint = "https://api.hotdoggies.stamer.demo.altostrat.com"
 token = os.environ["TOKEN"]
 headers = {"Authorization": f"Bearer {token}"}
 source = "python-loader"
-pack_size = 20
+pack_size = 8
 thread_executor = concurrent.futures.ThreadPoolExecutor(max_workers=pack_size)
 terminate = False
 
 class colors:
     BLUE = '\033[94m'
     GREEN = '\033[92m'
+    YELLOW = '\033[93m'
+    RED = '\033[91m'
     WHITE = '\033[0m'
 
 def addRandomDog():
@@ -40,7 +42,7 @@ def addRandomDog():
     }
 
     event_type="es.hotdoggi.events.dog_added"
-    print(f"{colors.BLUE}C[{event_type}]{colors.WHITE} creating {data['dog']['name']} ({data['dog']['color']} {data['dog']['breed']})")
+    print(f"{colors.BLUE}ASYNC[{event_type}]\t{colors.WHITE} creating {colors.RED}{data['dog']['name']}{colors.WHITE} ({data['dog']['color']} {data['dog']['breed']})")
     
     r = requests.post(f"{endpoint}/events/{event_type}/{source}", data=json.dumps(data), headers=headers)
     if r.status_code != 201:
@@ -48,21 +50,21 @@ def addRandomDog():
 
 def getAllDogs():
     r = requests.get(f"{endpoint}/dogs/", headers=headers)
-    print(f"{colors.GREEN}Q[/dogs/*]{colors.WHITE} listing all dogs")
+    print(f"{colors.GREEN} SYNC[dogs/*]\t\t\t\t{colors.WHITE} listing all dogs")
     if r.status_code > 299:
         print("error getting dogs")
     return json.loads(r.text)
 
-def getDog(id):
-    r = requests.get(f"{endpoint}/dogs/{id}", headers=headers)
-    print(f"{colors.GREEN}Q[/dogs/{id}]{colors.WHITE} reading dog")
+def getDog(dog):
+    r = requests.get(f"{endpoint}/dogs/{dog['id']}", headers=headers)
+    print(f"{colors.GREEN} SYNC[dogs/{dog['id']}]\t{colors.WHITE} update {colors.RED}{dog['dog']['name']}{colors.WHITE}")
     if r.status_code > 299:
         print("error getting dog")
     return json.loads(r.text)
 
 def simulateDogMovement(dog):
     while not terminate:
-        update = getDog(dog['id'])
+        update = getDog(dog)
         data = {
             "id": dog['id'],
             "dog": {
@@ -73,13 +75,13 @@ def simulateDogMovement(dog):
             } 
         }
         event_type = "es.hotdoggi.events.dog_moved"
-        print(f"{colors.BLUE}C[{event_type}]{colors.WHITE} moving {dog['dog']['name']} (id {dog['id']})")
+        print(f"{colors.BLUE}ASYNC[{event_type}]\t{colors.WHITE} moving {colors.RED}{dog['dog']['name']}{colors.WHITE} to {colors.YELLOW}({data['dog']['location']['latitude']},{data['dog']['location']['latitude']}){colors.WHITE}")
 
         r = requests.post(f"{endpoint}/events/{event_type}/{source}", data=json.dumps(data), headers=headers)
         if r.status_code != 201:
             print("error publishing event")
 
-        time.sleep(10)
+        time.sleep(random.uniform(8.0, 12.0))
 
 def removeDog(dog):
     data = {
@@ -87,7 +89,7 @@ def removeDog(dog):
     }
 
     event_type = "es.hotdoggi.events.dog_removed"
-    print(f"{colors.BLUE}C[{event_type}]{colors.WHITE} removing {dog['dog']['name']} (id {dog['id']})")
+    print(f"{colors.BLUE}ASYNC[{event_type}]\t{colors.WHITE} removing {colors.RED}{dog['dog']['name']}{colors.WHITE} (id {dog['id']})")
 
     r = requests.post(f"{endpoint}/events/{event_type}/{source}", data=json.dumps(data), headers=headers)
     if r.status_code != 201:
