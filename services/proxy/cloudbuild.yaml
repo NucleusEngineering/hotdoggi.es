@@ -5,6 +5,7 @@ steps:
   - '"Authorization: Bearer $(gcloud auth print-access-token)"'
   - '-X'
   - 'GET'
+  - '--http1.1'
   - 'https://servicemanagement.googleapis.com/v1/services/$_API_NAME/configs/_API_CONFIG'
   - '-o'
   - '/workspace/service.json'
