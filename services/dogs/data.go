@@ -122,11 +122,10 @@ func Add(ctx context.Context, dog Dog) (DogRef, error) {
 	dog.Metadata.Modified = time.Now()
 
 	log.Printf("adding new dog ... ")
-	ref, result, err := client.Collection(collectionName).Add(ctx, dog)
+	ref, _, err := client.Collection(collectionName).Add(ctx, dog)
 	if err != nil {
 		return DogRef{}, err
 	}
-	log.Printf("done at %v\n", result.UpdateTime)
 
 	return DogRef{
 		ID:  ref.ID,
@@ -142,12 +141,11 @@ func Update(ctx context.Context, key string, dog Dog) (DogRef, error) {
 
 	dog.Metadata.Modified = time.Now()
 
-	log.Printf("updating dog(%s) ... ", key)
-	result, err := client.Collection(collectionName).Doc(key).Set(ctx, dog)
+	log.Printf("updating dog(%s)\n", key)
+	_, err := client.Collection(collectionName).Doc(key).Set(ctx, dog)
 	if err != nil {
 		return DogRef{}, err
 	}
-	log.Printf("done at %v\n", result.UpdateTime)
 
 	return DogRef{
 		ID:  key,
@@ -161,12 +159,11 @@ func Delete(ctx context.Context, key string) error {
 	defer span.End()
 	client := Global["client.firestore"].(*firestore.Client)
 
-	log.Printf("deleting dog(%s) ... ", key)
-	result, err := client.Collection("dogs").Doc(key).Delete(ctx)
+	log.Printf("deleting dog(%s)\n", key)
+	_, err := client.Collection(collectionName).Doc(key).Delete(ctx)
 	if err != nil {
 		return err
 	}
-	log.Printf("done at %v\n", result.UpdateTime)
 
 	return nil
 }

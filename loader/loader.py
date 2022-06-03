@@ -19,6 +19,11 @@ pack_size = 20
 thread_executor = concurrent.futures.ThreadPoolExecutor(max_workers=pack_size)
 terminate = False
 
+class colors:
+    BLUE = '\033[94m'
+    GREEN = '\033[92m'
+    WHITE = '\033[0m'
+
 def addRandomDog():
     data = {
         "dog": {
@@ -35,7 +40,7 @@ def addRandomDog():
     }
 
     event_type="es.hotdoggi.events.dog_added"
-    print(f"C[{event_type}] creating {data['dog']['name']} ({data['dog']['color']} {data['dog']['breed']})")
+    print(f"{colors.BLUE}C[{event_type}]{colors.WHITE} creating {data['dog']['name']} ({data['dog']['color']} {data['dog']['breed']})")
     
     r = requests.post(f"{endpoint}/events/{event_type}/{source}", data=json.dumps(data), headers=headers)
     if r.status_code != 201:
@@ -43,14 +48,14 @@ def addRandomDog():
 
 def getAllDogs():
     r = requests.get(f"{endpoint}/dogs/", headers=headers)
-    print(f"Q[/dogs/] listing all dogs")
+    print(f"{colors.GREEN}Q[/dogs/*]{colors.WHITE} listing all dogs")
     if r.status_code > 299:
         print("error getting dogs")
     return json.loads(r.text)
 
 def getDog(id):
     r = requests.get(f"{endpoint}/dogs/{id}", headers=headers)
-    print(f"Q[/dogs/{id}] reading dog")
+    print(f"{colors.GREEN}Q[/dogs/{id}]{colors.WHITE} reading dog")
     if r.status_code > 299:
         print("error getting dog")
     return json.loads(r.text)
@@ -68,7 +73,7 @@ def simulateDogMovement(dog):
             } 
         }
         event_type = "es.hotdoggi.events.dog_moved"
-        print(f"C[{event_type}] moving {dog['dog']['name']} (id {dog['id']})")
+        print(f"{colors.BLUE}C[{event_type}]{colors.WHITE} moving {dog['dog']['name']} (id {dog['id']})")
 
         r = requests.post(f"{endpoint}/events/{event_type}/{source}", data=json.dumps(data), headers=headers)
         if r.status_code != 201:
@@ -82,7 +87,7 @@ def removeDog(dog):
     }
 
     event_type = "es.hotdoggi.events.dog_removed"
-    print(f"C[{event_type}] removing {dog['dog']['name']} (id {dog['id']})")
+    print(f"{colors.BLUE}C[{event_type}]{colors.WHITE} removing {dog['dog']['name']} (id {dog['id']})")
 
     r = requests.post(f"{endpoint}/events/{event_type}/{source}", data=json.dumps(data), headers=headers)
     if r.status_code != 201:
