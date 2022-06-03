@@ -13,7 +13,7 @@ steps:
   args: 
   - 'build'
   - '-f'
-  - 'Dockerfile_cloud_build'
+  - 'services/$_SERVICE/Dockerfile_cloud_build'
   - '-t'
   - 'gcr.io/$PROJECT_ID/$_SERVICE'
   - 'services/$_SERVICE/'
