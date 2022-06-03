@@ -8,11 +8,16 @@ steps:
   - |-
     curl --http1.1 --silent --fail -H "Authorization: Bearer $(gcloud auth print-access-token)" "https://servicemanagement.googleapis.com/v1/services/$_API_NAME/configs/$_API_CONFIG" -o /workspace/service.json
 - name: 'gcr.io/cloud-builders/docker'
-  args: 
-  - 'build'
-  - '-t'
-  - 'gcr.io/$PROJECT_ID/$_SERVICE'
-  - 'services/$_SERVICE/'
+  script: |
+    #!/bin/sh
+    cp /workspace/service.json services/$_SERVICE/service.json
+    docker build -t gcr.io/$PROJECT_ID/$_SERVICE services/$_SERVICE/
+# - name: 'gcr.io/cloud-builders/docker'
+#   args: 
+#   - 'build'
+#   - '-t'
+#   - 'gcr.io/$PROJECT_ID/$_SERVICE'
+#   - 'services/$_SERVICE/'
 - name: 'gcr.io/cloud-builders/docker'
   args:
   - 'push'

@@ -12,11 +12,9 @@ run:
 
 build:
 	gcloud services enable cloudbuild.googleapis.com
-	rm service.json || exit 0
 	sh configure.sh
 	gcloud builds submit --tag=gcr.io/${PROJECT}/${SERVICE} .
-	rm service.json || exit 0
-	ln -s /workspace/service.json service.json
+	rm service.json
 
 update:
 	gcloud run services update ${PREFIX}-${SERVICE} --region=${REGION} --image=gcr.io/${PROJECT}/${SERVICE}
