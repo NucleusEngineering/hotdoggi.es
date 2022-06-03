@@ -16,12 +16,6 @@ steps:
   - |-
     cp /workspace/service.json services/$_SERVICE/service.json
     docker build -t gcr.io/$PROJECT_ID/$_SERVICE services/$_SERVICE/
-# - name: 'gcr.io/cloud-builders/docker'
-#   args: 
-#   - 'build'
-#   - '-t'
-#   - 'gcr.io/$PROJECT_ID/$_SERVICE'
-#   - 'services/$_SERVICE/'
 - name: 'gcr.io/cloud-builders/docker'
   args:
   - 'push'
