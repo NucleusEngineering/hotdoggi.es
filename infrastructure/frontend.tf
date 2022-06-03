@@ -5,8 +5,8 @@ resource "google_compute_managed_ssl_certificate" "frontend" {
 
   managed {
     domains = [
-      "${local.domain}.",
-      "api.${local.domain}."
+      # "api.${local.domain}.",
+      "${local.domain}."
     ]
   }
 }
@@ -35,14 +35,6 @@ resource "google_compute_url_map" "frontend" {
   name            = "${local.prefix}-urlmap"
   default_service = google_compute_backend_bucket.app.id
 
-  host_rule {
-    hosts        = ["api.${local.domain}"]
-    path_matcher = "api"
-  }
-  path_matcher {
-    name            = "api"
-    default_service = google_compute_backend_service.proxy.id
-  }
   host_rule {
     hosts        = ["${local.domain}"]
     path_matcher = "app"

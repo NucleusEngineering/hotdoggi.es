@@ -42,7 +42,7 @@ resource "google_cloud_run_service" "proxy" {
   }
   metadata {
     annotations = {
-      "run.googleapis.com/ingress" = "internal-and-cloud-load-balancing"
+      "run.googleapis.com/ingress" = "all"
     }
   }
   traffic {
@@ -51,28 +51,18 @@ resource "google_cloud_run_service" "proxy" {
   }
 }
 
-resource "google_compute_region_network_endpoint_group" "proxy" {
-  name                  = "${local.prefix}-api-neg"
-  provider              = google-beta
-  project               = local.project
-  network_endpoint_type = "SERVERLESS"
-  region                = local.region
-  cloud_run {
-    service = google_cloud_run_service.proxy.name
+# Custom domain mapping for this service
+resource "google_cloud_run_domain_mapping" "proxy" {
+  project  = local.project
+  location = local.region
+  name     = "api.${local.domain}"
+  metadata {
+    namespace = local.project
+  }
+  spec {
+    route_name = google_cloud_run_service.proxy.name
   }
 }
-
-resource "google_compute_backend_service" "proxy" {
-  project               = local.project
-  provider              = google-beta
-  name                  = "${local.prefix}-api-backend"
-  description           = "Origin for dynamic API serving"
-  load_balancing_scheme = "EXTERNAL"
-  backend {
-    group = google_compute_region_network_endpoint_group.proxy.id
-  }
-}
-
 
 # Allow Cloud Build to bind SA
 resource "google_service_account_iam_member" "proxy-sa-user" {

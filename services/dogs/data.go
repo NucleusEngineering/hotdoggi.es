@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"log"
 	"time"
 
 	firestore "cloud.google.com/go/firestore"
@@ -71,6 +72,7 @@ func List(ctx context.Context) ([]DogRef, error) {
 	defer span.End()
 	result := []DogRef{}
 	client := Global["client.firestore"].(*firestore.Client)
+	log.Printf("scanning dogs\n")
 	iter := client.Collection(collectionName).Documents(ctx)
 	for {
 		snap, err := iter.Next()
@@ -96,12 +98,15 @@ func Get(ctx context.Context, key string) (DogRef, error) {
 	ctx, span := trace.StartSpan(ctx, "dogs.data.get")
 	defer span.End()
 	client := Global["client.firestore"].(*firestore.Client)
+
+	log.Printf("reading dog(%s)\n", key)
 	snap, err := client.Collection(collectionName).Doc(key).Get(ctx)
 	if err != nil {
 		return DogRef{}, err
 	}
 	var dog Dog
 	snap.DataTo(&dog)
+
 	return DogRef{
 		ID:  snap.Ref.ID,
 		Dog: dog,
@@ -116,12 +121,15 @@ func Add(ctx context.Context, dog Dog) (DogRef, error) {
 
 	dog.Metadata.Modified = time.Now()
 
-	result, _, err := client.Collection(collectionName).Add(ctx, dog)
+	log.Printf("adding new dog ... ")
+	ref, result, err := client.Collection(collectionName).Add(ctx, dog)
 	if err != nil {
 		return DogRef{}, err
 	}
+	log.Printf("done at %v\n", result.UpdateTime)
+
 	return DogRef{
-		ID:  result.ID,
+		ID:  ref.ID,
 		Dog: dog,
 	}, nil
 }
@@ -134,10 +142,13 @@ func Update(ctx context.Context, key string, dog Dog) (DogRef, error) {
 
 	dog.Metadata.Modified = time.Now()
 
-	_, err := client.Collection(collectionName).Doc(key).Set(ctx, dog)
+	log.Printf("updating dog(%s) ... ", key)
+	result, err := client.Collection(collectionName).Doc(key).Set(ctx, dog)
 	if err != nil {
 		return DogRef{}, err
 	}
+	log.Printf("done at %v\n", result.UpdateTime)
+
 	return DogRef{
 		ID:  key,
 		Dog: dog,
@@ -149,9 +160,13 @@ func Delete(ctx context.Context, key string) error {
 	ctx, span := trace.StartSpan(ctx, "dogs.data.delete")
 	defer span.End()
 	client := Global["client.firestore"].(*firestore.Client)
-	_, err := client.Collection("dogs").Doc(key).Delete(ctx)
+
+	log.Printf("deleting dog(%s) ... ", key)
+	result, err := client.Collection("dogs").Doc(key).Delete(ctx)
 	if err != nil {
 		return err
 	}
+	log.Printf("done at %v\n", result.UpdateTime)
+
 	return nil
 }

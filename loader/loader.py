@@ -15,8 +15,8 @@ endpoint = "https://api.hotdoggies.stamer.demo.altostrat.com"
 token = os.environ["TOKEN"]
 headers = {"Authorization": f"Bearer {token}"}
 source = "python-loader"
-max_workers = 8
-thread_executor = concurrent.futures.ThreadPoolExecutor(max_workers=max_workers)
+pack_size = 20
+thread_executor = concurrent.futures.ThreadPoolExecutor(max_workers=pack_size)
 terminate = False
 
 def addRandomDog():
@@ -35,7 +35,7 @@ def addRandomDog():
     }
 
     event_type="es.hotdoggi.events.dog_added"
-    print(f"[{event_type}] creating {data['dog']['name']} ({data['dog']['color']} {data['dog']['breed']})")
+    print(f"C[{event_type}] creating {data['dog']['name']} ({data['dog']['color']} {data['dog']['breed']})")
     
     r = requests.post(f"{endpoint}/events/{event_type}/{source}", data=json.dumps(data), headers=headers)
     if r.status_code != 201:
@@ -43,23 +43,32 @@ def addRandomDog():
 
 def getAllDogs():
     r = requests.get(f"{endpoint}/dogs/", headers=headers)
+    print(f"Q[/dogs/] listing all dogs")
     if r.status_code > 299:
         print("error getting dogs")
     return json.loads(r.text)
 
+def getDog(id):
+    r = requests.get(f"{endpoint}/dogs/{id}", headers=headers)
+    print(f"Q[/dogs/{id}] reading dog")
+    if r.status_code > 299:
+        print("error getting dog")
+    return json.loads(r.text)
+
 def simulateDogMovement(dog):
     while not terminate:
+        update = getDog(dog['id'])
         data = {
             "id": dog['id'],
             "dog": {
                 "location": {
-                    "longitude": dog['dog']['location']['longitude'] + (0.001 * random.choice((-1, 1))),
-                    "latitude": dog['dog']['location']['latitude'] + (0.001 * random.choice((-1, 1)))
+                    "longitude": update['dog']['location']['longitude'] + (0.001 * random.choice((-1, 1))),
+                    "latitude": update['dog']['location']['latitude'] + (0.001 * random.choice((-1, 1)))
                 }
             } 
         }
         event_type = "es.hotdoggi.events.dog_moved"
-        print(f"[{event_type}] moving {dog['dog']['name']} (id {dog['id']})")
+        print(f"C[{event_type}] moving {dog['dog']['name']} (id {dog['id']})")
 
         r = requests.post(f"{endpoint}/events/{event_type}/{source}", data=json.dumps(data), headers=headers)
         if r.status_code != 201:
@@ -73,7 +82,7 @@ def removeDog(dog):
     }
 
     event_type = "es.hotdoggi.events.dog_removed"
-    print(f"[{event_type}] removing {dog['dog']['name']} (id {dog['id']})")
+    print(f"C[{event_type}] removing {dog['dog']['name']} (id {dog['id']})")
 
     r = requests.post(f"{endpoint}/events/{event_type}/{source}", data=json.dumps(data), headers=headers)
     if r.status_code != 201:
@@ -99,15 +108,15 @@ def randomBirthday():
     return birthday.strftime("%Y-%m-%d")
 
 def randomColor():
-    colors = ["Brown","Dark Chocolate","Red","Black ","White","Gold","Yellow","Cream","Blue","Grey"]
+    colors = ["Brown","Dark Chocolate","Red","Black","White","Gold","Yellow","Cream","Blue","Grey"]
     return random.choice(colors)
 
 def abortHandler(signum, frame):
-    print("Caught exit... Suspending movement simulation")
+    print("\nCaught exit... Suspending movement simulation")
     global terminate
     terminate = True
     thread_executor.shutdown
-    time.sleep(11)
+    time.sleep(12)
     print("Removing dogs from the pack...")
     dogs = getAllDogs()
     for dog in dogs:
@@ -119,11 +128,11 @@ signal.signal(signal.SIGINT, abortHandler)
 
 def main():
     print("Adding some dogs to the pack...")
-    for _ in range(max_workers):
+    for _ in range(pack_size):
         addRandomDog()
     
-    print("Waiting 5 seconds for dog registration...")
-    time.sleep(5)
+    print("Waiting 10 seconds for dog registration...")
+    time.sleep(10)
 
     dogs = getAllDogs()
     print(f"Found {len(dogs)} dogs in the pack.")

@@ -15,12 +15,13 @@ resource "google_dns_record_set" "lb-a-app" {
   ttl          = 300
   rrdatas      = [google_compute_global_forwarding_rule.frontend.ip_address]
 }
+
 resource "google_dns_record_set" "lb-a-api" {
   project      = local.project
   provider     = google-beta
   name         = "api.${local.domain}."
   managed_zone = google_dns_managed_zone.zone.name
-  type         = "A"
+  type         = "CNAME"
   ttl          = 300
-  rrdatas      = [google_compute_global_forwarding_rule.frontend.ip_address]
+  rrdatas      = ["ghs.googlehosted.com."]
 }

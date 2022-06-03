@@ -54,7 +54,7 @@ resource "google_cloud_run_service" "archiver" {
   }
   metadata {
     annotations = {
-      "run.googleapis.com/ingress" = "internal-and-cloud-load-balancing"
+      "run.googleapis.com/ingress" = "all"
     }
   }
   traffic {
