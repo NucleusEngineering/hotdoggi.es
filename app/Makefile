@@ -1,5 +1,5 @@
 clean:
-	rm -rf static
+	rm -rf spa/build
 	rm -rf spa/node_modules
 
 compile:
