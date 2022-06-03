@@ -6,8 +6,15 @@ steps:
   - '-X'
   - 'GET'
   - '--http1.1'
+  - '--silent'
+  - '--show-error'
+  - '--fail'
   - 'https://servicemanagement.googleapis.com/v1/services/$_API_NAME/configs/_API_CONFIG'
   - '-o'
+  - '/workspace/service.json'
+- name: 'ubuntu'
+  args: 
+  - 'cat'
   - '/workspace/service.json'
 - name: 'gcr.io/cloud-builders/docker'
   args: 
