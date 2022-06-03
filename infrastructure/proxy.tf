@@ -63,11 +63,11 @@ resource "google_compute_region_network_endpoint_group" "proxy" {
 }
 
 resource "google_compute_backend_service" "proxy" {
-  project  = local.project
-  provider = google-beta
-  name     = "${local.prefix}-api-backend"
-  description = "Origin for dynamic API serving"
-  load_balancing_scheme = "EXTERNAL_MANAGED"
+  project               = local.project
+  provider              = google-beta
+  name                  = "${local.prefix}-api-backend"
+  description           = "Origin for dynamic API serving"
+  load_balancing_scheme = "EXTERNAL"
   backend {
     group = google_compute_region_network_endpoint_group.proxy.id
   }

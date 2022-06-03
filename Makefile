@@ -26,7 +26,7 @@ trigger:
 
 load:
 	@clear
-	@ENDPOINT=$(shell terraform -chdir=infrastructure output ingest-endpoint) python3 loader/loader.py
+	python3 loader/loader.py
 
 services: dogs
 

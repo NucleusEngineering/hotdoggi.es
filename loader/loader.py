@@ -6,20 +6,20 @@ import concurrent.futures
 import requests
 import datetime
 import random
-import threading
+import signal
 import time
 from random import randrange
 from datetime import datetime, timedelta
 
-thread_local = threading.local()
 endpoint = "https://api.hotdoggies.stamer.demo.altostrat.com"
 token = os.environ["TOKEN"]
 headers = {"Authorization": f"Bearer {token}"}
 source = "python-loader"
+max_workers = 8
+thread_executor = concurrent.futures.ThreadPoolExecutor(max_workers=max_workers)
+terminate = False
 
 def addRandomDog():
-    event_type="es.hotdoggi.events.dog_added"
-    print(f"Generating event: {event_type}")
     data = {
         "dog": {
             "name": randomName(),
@@ -33,6 +33,10 @@ def addRandomDog():
             }
         }
     }
+
+    event_type="es.hotdoggi.events.dog_added"
+    print(f"[{event_type}] creating {data['dog']['name']} ({data['dog']['color']} {data['dog']['breed']})")
+    
     r = requests.post(f"{endpoint}/events/{event_type}/{source}", data=json.dumps(data), headers=headers)
     if r.status_code != 201:
         print("error publishing event")
@@ -44,10 +48,7 @@ def getAllDogs():
     return json.loads(r.text)
 
 def simulateDogMovement(dog):
-    while True:
-        event_type = "es.hotdoggi.events.dog_moved"
-        print(f"Generating event: {event_type}")
-    
+    while not terminate:
         data = {
             "id": dog['id'],
             "dog": {
@@ -57,12 +58,26 @@ def simulateDogMovement(dog):
                 }
             } 
         }
+        event_type = "es.hotdoggi.events.dog_moved"
+        print(f"[{event_type}] moving {dog['dog']['name']} (id {dog['id']})")
 
         r = requests.post(f"{endpoint}/events/{event_type}/{source}", data=json.dumps(data), headers=headers)
         if r.status_code != 201:
             print("error publishing event")
 
         time.sleep(10)
+
+def removeDog(dog):
+    data = {
+        "id": dog['id']
+    }
+
+    event_type = "es.hotdoggi.events.dog_removed"
+    print(f"[{event_type}] removing {dog['dog']['name']} (id {dog['id']})")
+
+    r = requests.post(f"{endpoint}/events/{event_type}/{source}", data=json.dumps(data), headers=headers)
+    if r.status_code != 201:
+        print("error publishing event")
 
 def randomName():
     names = ["Max","Kobe","Oscar","Cooper","Oakley","Mac","Charlie","Rex","Rudy","Teddy","Ailey","Chip","Bear","Cash","Walter","Milo","Jasper","Blaze","Bentley","Bo","Ozzy","Ollie","Boomer","Odin","Buddy","Lucky","Axel","Rocky","Ruger","Bruce","Leo","Beau","Odie","Zeus","Baxter","Arlo","Duke","Oreo","Echo","Finn","Gunner","Tank","Apollo","Henry","Romeo","Murphy","Simba","Porter","Diesel","George","Harley","Toby","Coco","Otis","Louie","Rocket","Rocco","Tucker","Ziggy","Remi","Jax","Prince","Whiskey","Ace","Shadow","Sam","Jack","Riley","Buster","Koda","Copper","Bubba","Winston","Luke","Jake","Oliver","Marley","Benny","Gus","Zeke","Bowie","Loki","Levi","Dozer","Moose","Benji","Rusty","Archie","Ranger","Joey","Bandit","Remy","Kylo","Scout","Dexter","Ryder","Thor","Gizmo","Tyson","Bruno","Chase","Samson","King","Cody","Rambo","Blue","Sarge","Harry","Atlas","Chester","Gucci","Theo","Maverick","Miles","Jackson","Lincoln","Watson","Hank","Wally","Peanut","Titan"]
@@ -87,16 +102,35 @@ def randomColor():
     colors = ["Brown","Dark Chocolate","Red","Black ","White","Gold","Yellow","Cream","Blue","Grey"]
     return random.choice(colors)
 
+def abortHandler(signum, frame):
+    print("Caught exit... Suspending movement simulation")
+    global terminate
+    terminate = True
+    thread_executor.shutdown
+    time.sleep(11)
+    print("Removing dogs from the pack...")
+    dogs = getAllDogs()
+    for dog in dogs:
+        removeDog(dog)
+    
+    print("Clean exit.")
+
+signal.signal(signal.SIGINT, abortHandler)
+
 def main():
-    for _ in range(20):
+    print("Adding some dogs to the pack...")
+    for _ in range(max_workers):
         addRandomDog()
     
-    print("Waiting for dog registration...")
-    time.sleep(20)
-    dogs = getAllDogs()
+    print("Waiting 5 seconds for dog registration...")
+    time.sleep(5)
 
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        executor.map(simulateDogMovement, dogs)
+    dogs = getAllDogs()
+    print(f"Found {len(dogs)} dogs in the pack.")
+
+    print("Simulating movement ...")
+    thread_executor.map(simulateDogMovement, dogs)
+
 
 if __name__ == "__main__":
     main()

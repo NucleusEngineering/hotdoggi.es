@@ -16,7 +16,7 @@ resource "google_compute_global_forwarding_rule" "frontend" {
   provider              = google-beta
   name                  = "${local.prefix}-forwarding-rule"
   ip_protocol           = "TCP"
-  load_balancing_scheme = "EXTERNAL_MANAGED"
+  load_balancing_scheme = "EXTERNAL"
   port_range            = "443"
   target                = google_compute_target_https_proxy.frontend.id
 }

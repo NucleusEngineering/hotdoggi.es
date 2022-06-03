@@ -60,14 +60,14 @@ resource "google_cloudfunctions_function" "function" {
   }
 
   environment_variables = {
-    TOPIC     = google_pubsub_topic.topic.name,
+    TOPIC                = google_pubsub_topic.topic.name,
     GOOGLE_CLOUD_PROJECT = local.project
   }
 }
 
 resource "google_cloudbuild_trigger" "trigger" {
-  project     = local.project
-  provider    = google-beta
+  project  = local.project
+  provider = google-beta
   github {
     name  = local.repo
     owner = local.repo_owner
@@ -91,9 +91,9 @@ resource "google_cloudbuild_trigger" "trigger" {
 }
 
 resource "google_project_iam_member" "trigger-function-deployer" {
-  project                     = local.project
-  role               = "roles/cloudfunctions.admin"
-  member             = "serviceAccount:${local.project_number}@cloudbuild.gserviceaccount.com"
+  project = local.project
+  role    = "roles/cloudfunctions.admin"
+  member  = "serviceAccount:${local.project_number}@cloudbuild.gserviceaccount.com"
 }
 
 resource "google_storage_bucket" "function-bucket" {

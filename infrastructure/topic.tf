@@ -10,7 +10,7 @@ resource "google_pubsub_topic" "dead-letter" {
 
 resource "google_pubsub_subscription" "subscription" {
   project = local.project
-  name    = "${local.prefix}-default-pull"
+  name    = "${local.prefix}-dead-letter-pull"
   topic   = google_pubsub_topic.dead-letter.name
 }
 

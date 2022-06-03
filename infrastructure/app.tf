@@ -4,9 +4,9 @@ resource "google_storage_bucket" "app" {
   name                        = "${local.prefix}-app-bucket"
   uniform_bucket_level_access = true
   location                    = "EU"
-  
-  force_destroy               = true
-    website {
+
+  force_destroy = true
+  website {
     main_page_suffix = "index.html"
     not_found_page   = "404.html"
   }
@@ -22,9 +22,9 @@ resource "google_compute_backend_bucket" "app" {
 }
 
 resource "google_storage_bucket_iam_member" "app" {
-  bucket   = google_storage_bucket.app.name
-  role     = "roles/storage.objectViewer"
-  member   = "allUsers"
+  bucket = google_storage_bucket.app.name
+  role   = "roles/storage.objectViewer"
+  member = "allUsers"
 }
 
 resource "google_cloudbuild_trigger" "app" {

@@ -83,7 +83,7 @@ resource "google_pubsub_subscription" "archiver" {
     }
   }
   dead_letter_policy {
-    dead_letter_topic = google_pubsub_topic.dead-letter.id
+    dead_letter_topic     = google_pubsub_topic.dead-letter.id
     max_delivery_attempts = 5
   }
 }

@@ -54,7 +54,7 @@ resource "google_cloud_run_service" "dogs" {
   }
   metadata {
     annotations = {
-      "run.googleapis.com/ingress" = "internal-and-cloud-load-balancing"
+      "run.googleapis.com/ingress" = "all"
     }
   }
   traffic {
@@ -91,7 +91,7 @@ resource "google_pubsub_subscription" "dogs" {
     }
   }
   dead_letter_policy {
-    dead_letter_topic = google_pubsub_topic.dead-letter.id
+    dead_letter_topic     = google_pubsub_topic.dead-letter.id
     max_delivery_attempts = 5
   }
 }
