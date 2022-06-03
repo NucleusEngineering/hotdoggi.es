@@ -88,7 +88,7 @@ resource "google_cloudbuild_trigger" "proxy" {
     _API_NAME    = google_endpoints_service.default.service_name
     _API_CONFIG  = google_endpoints_service.default.config_id
   }
-  filename = "services/dogs/cloudbuild.yaml"
+  filename = "services/proxy/cloudbuild.yaml"
 }
 
 output "gateway_sa" {

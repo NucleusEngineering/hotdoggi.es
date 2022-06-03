@@ -7,10 +7,12 @@ steps:
   - 'GET'
   - 'https://servicemanagement.googleapis.com/v1/services/$_API_NAME/configs/_API_CONFIG'
   - '-o'
-  - 'service.json'
+  - '/workspace/service.json'
 - name: 'gcr.io/cloud-builders/docker'
   args: 
   - 'build'
+  - '-f'
+  - 'Dockerfile_cloud_build'
   - '-t'
   - 'gcr.io/$PROJECT_ID/$_SERVICE'
   - 'services/$_SERVICE/'
