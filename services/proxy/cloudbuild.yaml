@@ -1,26 +1,31 @@
 steps:
-- name: 'gcr.io/cloud-builders/gcloud'
-  args: 
-  - 'auth'
-  - 'print-access-token'
-- name: 'gcr.io/cloud-builders/curl'
-  args: 
-  - '-H'
-  - '"Authorization: Bearer $(gcloud auth print-access-token)"'
-  - '-X'
-  - 'GET'
-  - '--http1.1'
-  - '--silent'
-  - '--show-error'
-  - '--fail'
-  - '--verbose'
-  - 'https://servicemanagement.googleapis.com/v1/services/$_API_NAME/configs/_API_CONFIG'
-  - '-o'
-  - '/workspace/service.json'
+# - name: 'gcr.io/cloud-builders/curl'
+#   args: 
+#   - '-H'
+#   - '"Authorization: Bearer $(gcloud auth print-access-token)"'
+#   - '-X'
+#   - 'GET'
+#   - '--http1.1'
+#   - '--silent'
+#   - '--show-error'
+#   - '--fail'
+#   - '--verbose'
+#   - 'https://servicemanagement.googleapis.com/v1/services/$_API_NAME/configs/$_API_CONFIG'
+#   - '-o'
+#   - '/workspace/service.json'
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  entrypoint: 'bash'
+  args:
+  - '-eEuo'
+  - 'pipefail'
+  - '-c'
+  - |-
+    curl --http1.1 --silent --fail --verbose -H "Authorization: Bearer $(gcloud auth print-access-token)" "https://servicemanagement.googleapis.com/v1/services/$_API_NAME/configs/$_API_CONFIG" -o /workspace/service.json
 - name: 'bash'
   args: 
   - 'cat'
   - '/workspace/service.json'
+
 - name: 'gcr.io/cloud-builders/docker'
   args: 
   - 'build'
