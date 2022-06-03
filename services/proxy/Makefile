@@ -14,7 +14,7 @@ build:
 	gcloud services enable cloudbuild.googleapis.com
 	sh configure.sh
 	gcloud builds submit --tag=gcr.io/${PROJECT}/${SERVICE} .
-	echo "undefined" > service.json
+	rm service.json
 
 update:
 	gcloud run services update ${PREFIX}-${SERVICE} --region=${REGION} --image=gcr.io/${PROJECT}/${SERVICE}

@@ -1,3 +1,21 @@
+resource "google_project_service" "endpoints" {
+  project            = local.project
+  service            = "endpoints.googleapis.com"
+  disable_on_destroy = false
+}
+
+resource "google_project_service" "servicecontrol" {
+  project            = local.project
+  service            = "servicecontrol.googleapis.com"
+  disable_on_destroy = false
+}
+
+resource "google_project_service" "servicemanagement" {
+  project            = local.project
+  service            = "servicemanagement.googleapis.com"
+  disable_on_destroy = false
+}
+
 resource "google_project_service" "cloudrun" {
   project            = local.project
   service            = "run.googleapis.com"
@@ -69,5 +87,10 @@ resource "google_project_iam_member" "cloudbuild-deploy" {
   project = local.project
   role    = "roles/run.admin"
   member  = "serviceAccount:${local.project_number}@cloudbuild.gserviceaccount.com"
-
+}
+# Allow Cloud Build to read the Service Management API
+resource "google_project_iam_member" "cloudbuild-servicecontroller" {
+  project = local.project
+  role    = "roles/servicemanagement.serviceController"
+  member  = "serviceAccount:${local.project_number}@cloudbuild.gserviceaccount.com"
 }

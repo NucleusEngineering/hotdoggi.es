@@ -68,6 +68,29 @@ resource "google_service_account_iam_member" "proxy-sa-user" {
   member             = "serviceAccount:${local.project_number}@cloudbuild.gserviceaccount.com"
 }
 
+resource "google_cloudbuild_trigger" "proxy" {
+  project  = local.project
+  provider = google-beta
+  github {
+    name  = local.repo
+    owner = local.repo_owner
+    push {
+      branch = local.branch
+    }
+  }
+  name        = "${local.prefix}-proxy"
+  description = "Build pipeline for ${local.prefix}-proxy"
+  substitutions = {
+    _ENVIRONMENT = "prod"
+    _SERVICE     = "proxy"
+    _REGION      = local.region
+    _PREFIX      = local.prefix
+    _API_NAME    = google_endpoints_service.default.service_name
+    _API_CONFIG  = google_endpoints_service.default.config_id
+  }
+  filename = "services/dogs/cloudbuild.yaml"
+}
+
 output "gateway_sa" {
   value = google_service_account.proxy.email
 }
