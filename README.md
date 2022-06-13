@@ -12,13 +12,13 @@ Multiple contempory patterns have been implemented in the applications design an
 
 The frontend of the application is using the JAM Stack (JavaScript, APIs and Markup) pattern. A React application in `app/`, is integrated by Cloud Build and its production-optimized build is rsynced to a Google Cloud Storage bucket which serves as an origin backend for Google Cloud External HTTPS Load Balancing. Additionally, the serving of these static assets is accelerated through Google Cloud CDN.
 
-!(Build pipeline and CDN-accelerated serving of static frontend assets)[diagrams/static_serving.png]
+![Build pipeline and CDN-accelerated serving of static frontend assets](diagrams/static_serving.png)
 
 ### JAM Stack: API Frontend
 
-The A in JAM Stack stands for APIs and implements the frontends access to dynamic data via a RESTful API surface. 
+The A in JAM Stack stands for APIs and implements the frontend access to dynamic data via a RESTful API surface. The API is defined as an OpenAPI/Swagger specification that is uploaded to Cloud Endpoints, where it defines the API and registers it within Google's Service Management API. The proxy then pulls that configuration from the control plane and acts as an API gateway to all requests.
 
-!(RESTful API via ESPv2 proxy on Cloud Run with Cloud Endpoints control plane)[diagrams/proxy.png]
+![RESTful API via ESPv2 proxy on Cloud Run with Cloud Endpoints control plane](diagrams/proxy.png)
 
 ### CQRS
 
@@ -32,9 +32,12 @@ lorem ipsum
 
 lorem ipsum
 
-!(Powerful event orchestration through a $all event stream on Pub/Sub with filtered push-subscriptions)[diagrams/orchestration.png]
+![Powerful event orchestration through a $all event stream on Pub/Sub with filtered push-subscriptions](diagrams/orchestration.png)
 
 ### End-user & Service-to-Service Authentication 
 
 lorem ipsum
 
+### Tracing and Oberservability
+
+lorem ipsum
