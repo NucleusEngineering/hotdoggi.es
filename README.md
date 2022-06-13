@@ -24,13 +24,17 @@ The A in JAM Stack stands for APIs and implements the frontend access to dynamic
 
 lorem ipsum
 
-### Event-Sourcing
+### Event-Sourcing and Event-Sourcing
 
 lorem ipsum
 
 ### Event Choreography
 
-lorem ipsum
+Hotdoggi.es pushes all incoming events for a single `$all` Pub/Sub topic. Among other envelope metadata from the CloudEvents specification, all messages on the Pub/Sub topic keep the event type as a message attribute. Various Cloud Run services can then subscribe to the the specific events they are interested in by setting up a push subscription and implementing the HTTP POST event handlers.
+
+The choreography patterns of free-floating self-organization is extremely helpful here because it enables teams to seamlessly extend the functionality of the entire architecture by simply creating additional services and subscribing to the common event stream. Unlike an orchestration pattern, it is not required to make changes to a central router. This can be seen in [the subscription of the dogs service](https://github.com/helloworlddan/hotdoggi.es/blob/main/infrastructure/dogs.tf#L86).
+
+The combination of push-subscriptions delivered into highly elastic, autoscaled consuming services (like Cloud Run) is very effective as users don't need to worry about scaling message queues. Such an architecture is cost-effective at processing low rates of events and at the same time is capable for processing tens of thousands of events in seconds without any external operational adjustments.
 
 ![Powerful event orchestration through a $all event stream on Pub/Sub with filtered push-subscriptions](diagrams/orchestration.png)
 
@@ -38,6 +42,4 @@ lorem ipsum
 
 lorem ipsum
 
-### Tracing and Oberservability
 
-lorem ipsum
