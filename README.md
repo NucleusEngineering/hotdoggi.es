@@ -24,9 +24,13 @@ The A in JAM Stack stands for APIs and implements the frontend access to dynamic
 
 lorem ipsum
 
-### Event-Sourcing and Event-Sourcing
+![Command Query Responsibility Segregation](diagrams/cqrs.png)
+
+### Event-Sourcing and CloudEvents.io
 
 lorem ipsum
+
+![Event-sourcing flow](diagrams/event_sourcing.png)
 
 ### Event Choreography
 
@@ -36,7 +40,7 @@ The choreography patterns of free-floating self-organization is extremely helpfu
 
 The combination of push-subscriptions delivered into highly elastic, autoscaled consuming services (like Cloud Run) is very effective as users don't need to worry about scaling message queues. Such an architecture is cost-effective at processing low rates of events and at the same time is capable for processing tens of thousands of events in seconds without any external operational adjustments.
 
-![Powerful event orchestration through a $all event stream on Pub/Sub with filtered push-subscriptions](diagrams/orchestration.png)
+![Powerful event orchestration through a $all event stream on Pub/Sub with filtered push-subscriptions](diagrams/choreography.png)
 
 ### End-user & Service-to-Service Authentication 
 
