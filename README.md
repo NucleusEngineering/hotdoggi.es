@@ -5,7 +5,7 @@ Hotdoggi.es is a demo application to showcase modern and comtemporary applicatio
 The application implements a fictional business that provides digital convenience services to dog-owning customers. Users can register their pups and book trips to dog spas through the application. Drivers will collect the dog from a place of residence and chauffeur them to a spa or a dog hotel, where they can enjoy a beautiful day away from home socializing with others. During the trip, a multitude of event sources will emit updates about the dog so that the owning user can observe everything that happens from the comfort of their screens at home or on the go.
 
 ## Architectural Patterns
-
+"
 Multiple contempory patterns have been implemented in the applications design and can be observed by inspecting the code or deploying the application to a Google Cloud project.
 
 ### JAM Stack: Static Serving
@@ -22,15 +22,70 @@ The A in JAM Stack stands for APIs and implements the frontend access to dynamic
 
 ### CQRS
 
-lorem ipsum
+TODO: lorem ipsum
 
 ![Command Query Responsibility Segregation](diagrams/cqrs.png)
 
 ### Event-Sourcing and CloudEvents.io
 
-lorem ipsum
+TODO: lorem ipsum
 
 ![Event-sourcing flow](diagrams/event_sourcing.png)
+
+The following shows a sample event as it would be emitted from one of the sources, e.g. the web application. It is the type of raw event that would be accepted if it were POSTed to /events/es.hotdoggi.events.dog_added/web with the intent of adding a new dog to the ones owned by the user.
+
+```json
+{
+    "dog": {
+        "name": "Brudi",
+        "breed": "French Bulldog",
+        "birthday": "2017-01-29",
+        "color": "Brown",
+        "picture": "https://pbs.twimg.com/profile_images/1113006798817103873/wOnfFCHR_400x400.jpg",
+        "location": {
+            "latitude": 9,
+            "longitude": 64
+        }
+    }
+}
+```
+
+As the event passes through the event-sourcing flow, it gets enriched with additional information, like user context, time stamp, trace information, etc. Additionally the event is handled as a [CloudEvents.io](https://cloudevents.io) type. An event that gets pushed into one of the consumers would look something like the following.
+
+```json
+{
+    "id": "123-long-unique-event-id",
+    "source": "web",
+    "type": "es.hotdoggi.events.dog_added",
+    "specversion": "1.0",
+    "subject" : "hotdoggi.es",
+    "time" : "2018-04-05T17:31:00Z",
+    "datacontenttype" : "application/json",
+    "traceparent": "00-83f2290b448fd67fc256120851b7bd96-37d2d81ac8fa063f-00", 
+    "data" : {
+        "principal": {
+            "user_id": "123-long-unique-user-id",
+            "name": "Daniel Stamer",
+            "email": "dan@hello-world.sh",
+            "picture": "https://example.com-avatar.png"
+        },
+        "ref": {
+            "id": "",
+            "dog":{
+                "name": "Brudi",
+                "breed": "French Bulldog",
+                "birthday": "2017-01-29",
+                "color": "Brown",
+                "picture": "https://pbs.twimg.com/profile_images/1113006798817103873/wOnfFCHR_400x400.jpg",
+                "location": {
+                    "latitude": 9,
+                    "longitude": 64
+                }
+            }
+        }
+    }
+}
+```
 
 ### Event Choreography
 
@@ -44,6 +99,7 @@ The combination of push-subscriptions delivered into highly elastic, autoscaled 
 
 ### End-user & Service-to-Service Authentication 
 
-lorem ipsum
+TODO: lorem ipsum
 
+![End-User Authentication with Identity Platform and Encapsulated Tokens in Service-to-Service Communications](diagrams/authentication.png)
 

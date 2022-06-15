@@ -10,11 +10,11 @@
         "principal": {
             "user_id": "12345",
             "name": "Daniel Stamer",
-            "email": "stamer@google.com",
+            "email": "dan@hello-world.sh",
             "picture": "https://example.com-avatar.png"
         },
         "ref": {
-            "id": "1",
+            "id": "",
             "dog":{
                 "name": "Brudi",
                 "breed": "French Bulldog",
