@@ -31,7 +31,11 @@ The segregation is enforced at the API layer. Resources known to the API continu
 
 ### Event-Sourcing and CloudEvents.io
 
-TODO: lorem ipsum
+This demo application implements event-sourcing. Every change to the state of the system and its databases is ingested as an event. All events are validated and are transactionally-safe inserted into an event-log before being exposed to the rest of the system for processing. The entire state of the system can be reproduced by replaying events. Its easy to create separate, isolated environments and fan-out or replay events into these for testing purposes.
+
+Please note that a strictly event-sourced system is not always a great match for most applications: there are a lot of use-cases in which the concepts of event-sourcing are simply too strict and some of the intrinsic behaviors and design concepts could pose to be an obstacle or limit flexibility. This demo can easily be modified and 'downgraded' from event-sourced design to a less strict form of event-driven architecture. The event-log can be omitted, so that incoming, validated events could directly be passed onto the Pub/Sub messaging topic for further processing. In this option, one would lose the capability of re-playing events directly from the event-log. It is highly recommended to substitute the functionality of the event-log by other means. An archive of all processed events can be kept on cheap blob storage (shown in the demo) in order to replay events. Alternatively, database backups are also always a viable option to be able to recreate the state of the system rather than replaying events. Removing the event-log would also help to reduce cost of the architecture.
+
+In this concrete demo application, the `ingest` service accepts raw event payloads that are being POSTed in though the API at '/events'. The service authenticates, validates and inserted the event into Firestore, which serves as the event-log. Certain properties, like precise timestamps, are inserted by Firestore. Once Firestore commits an insertion transaction, the database emits an event which is picked up by a Cloud Function. The `trigger` function pulls the newly created event from the database, deserializes it as a CloudEvent and publishes it onto Pub/Sub. Apart from model validation there is no distinction or differentiation between event types up until this point. All events are treated equally and end up on a single `$all` topic.
 
 ![Event-sourcing flow](diagrams/event_sourcing.png)
 
