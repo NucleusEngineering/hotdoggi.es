@@ -108,7 +108,7 @@ func List(ctx context.Context) ([]DogRef, error) {
 }
 
 // ListStream will stream updates for all dogs belonging to a user back on a channel until a quit message is sent.
-func ListStream(ctx context.Context, userID string, dogs <-chan DogRef, quit <-chan bool) error {
+func ListStream(ctx context.Context, userID string, dogs chan<- DogRef, quit <-chan bool) error {
 	ctx, span := trace.StartSpan(ctx, "dogs.data.list_stream")
 	defer span.End()
 	client := Global["client.firestore"].(*firestore.Client)
@@ -143,7 +143,7 @@ func Get(ctx context.Context, key string) (DogRef, error) {
 }
 
 // GetStream will stream updates for a specific dog back on a channel until a quit message is sent.
-func GetStream(ctx context.Context, key string, dogs <-chan DogRef, quit <-chan bool) error {
+func GetStream(ctx context.Context, key string, dogs chan<- DogRef, quit <-chan bool) error {
 	ctx, span := trace.StartSpan(ctx, "dogs.data.get_stream")
 	defer span.End()
 	client := Global["client.firestore"].(*firestore.Client)
