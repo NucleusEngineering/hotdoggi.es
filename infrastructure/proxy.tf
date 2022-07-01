@@ -48,6 +48,9 @@ resource "google_cloud_run_service" "proxy" {
   template {
     spec {
       service_account_name = google_service_account.proxy.email
+      
+      timeout_seconds = 3600
+
       containers {
         image = "gcr.io/${local.project}/proxy"
       }

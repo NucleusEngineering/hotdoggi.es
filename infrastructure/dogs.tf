@@ -44,8 +44,11 @@ resource "google_cloud_run_service" "dogs" {
   template {
     spec {
       service_account_name = google_service_account.dogs.email
+
+      timeout_seconds = 3600
       containers {
         image = "gcr.io/${local.project}/dogs"
+
         env {
           name  = "GATEWAY_SA"
           value = google_service_account.proxy.email
