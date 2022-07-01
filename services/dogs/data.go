@@ -107,6 +107,21 @@ func List(ctx context.Context) ([]DogRef, error) {
 	return result, nil
 }
 
+// ListStream will stream updates for all dogs belonging to a user back on a channel until a quit message is sent.
+func ListStream(ctx context.Context, userID string, dogs <-chan DogRef, quit <-chan bool) error {
+	ctx, span := trace.StartSpan(ctx, "dogs.data.list_stream")
+	defer span.End()
+	client := Global["client.firestore"].(*firestore.Client)
+
+	log.Printf("streaming dogs for user(%s)\n", userID)
+
+	// TODO implement
+	_ = client
+	_ = ctx
+
+	return nil
+}
+
 // Get a specific dog
 func Get(ctx context.Context, key string) (DogRef, error) {
 	ctx, span := trace.StartSpan(ctx, "dogs.data.get")
@@ -125,6 +140,21 @@ func Get(ctx context.Context, key string) (DogRef, error) {
 		ID:  snap.Ref.ID,
 		Dog: dog,
 	}, nil
+}
+
+// GetStream will stream updates for a specific dog back on a channel until a quit message is sent.
+func GetStream(ctx context.Context, key string, dogs <-chan DogRef, quit <-chan bool) error {
+	ctx, span := trace.StartSpan(ctx, "dogs.data.get_stream")
+	defer span.End()
+	client := Global["client.firestore"].(*firestore.Client)
+
+	log.Printf("streaming dog(%s)\n", key)
+
+	// TODO implement
+	_ = client
+	_ = ctx
+
+	return nil
 }
 
 // Add a specific dog
