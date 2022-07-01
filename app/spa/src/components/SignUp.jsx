@@ -50,8 +50,8 @@ const SignUp = () => {
 
   return (
     <div className="mt-8">
-      <h1 className="text-3xl mb-2 text-center font-bold">Sign Up</h1>
-      <div className="border border-blue-400 mx-auto w-11/12 md:w-2/4 rounded py-8 px-4 md:px-8">
+      <h1 className="text-8xl mb-2 text-center font-bold">Sign Up</h1>
+      <div className="mx-auto w-11/12 md:w-2/4 rounded py-8 px-4 md:px-8">
         {error !== null && (
           <div className="py-4 bg-red-600 w-full text-white text-center mb-3">
             {error}
@@ -63,7 +63,7 @@ const SignUp = () => {
           </label>
           <input
             type="text"
-            className="my-1 p-1 w-full "
+            className="my-1 p-3 w-full rounded-full"
             name="displayName"
             value={displayName}
             placeholder="Choose a display name"
@@ -75,7 +75,7 @@ const SignUp = () => {
           </label>
           <input
             type="email"
-            className="my-1 p-1 w-full"
+            className="my-1 p-3 w-full rounded-full"
             name="userEmail"
             value={email}
             placeholder="Your email address"
@@ -87,7 +87,7 @@ const SignUp = () => {
           </label>
           <input
             type="password"
-            className="mt-1 mb-3 p-1 w-full"
+            className="mt-1 mb-3 p-3 w-full rounded-full"
             name="userPassword"
             value={password}
             placeholder="Choose a strong password"
@@ -95,7 +95,7 @@ const SignUp = () => {
             onChange={event => onChangeHandler(event)}
           />
           <button
-            className="bg-green-400 hover:bg-green-500 w-full py-2 text-white"
+            className="bg-green-400 hover:bg-green-500 w-full py-3 text-white rounded-full"
             onClick={event => {
               createUserWithEmailAndPasswordHandler(event, email, password);
             }}
@@ -112,7 +112,7 @@ const SignUp = () => {
               console.error("Error signing in with Google", error);
             }
           }}
-          className="bg-red-500 hover:bg-red-600 w-full py-2 text-white"
+          className="bg-red-500 hover:bg-red-600 w-full py-3 rounded-full text-white"
         >
           Sign In with Google
         </button>
@@ -125,13 +125,13 @@ const SignUp = () => {
               console.error("Error signing in with Google", error);
             }
           }}
-          className="bg-blue-500 hover:bg-blue-600 w-full py-2 text-white"
+          className="bg-blue-500 hover:bg-blue-600 w-full py-3 rounded-full text-white"
         >
           Sign In with Github
         </button>
         <p className="text-center my-3">
           Already have an account?{" "}
-          <Link to="/" className="text-blue-500 hover:text-blue-600">
+          <Link to="/" className="text-white hover:text-blue-600">
             Sign in here
           </Link>{" "}
         </p>
