@@ -34,9 +34,16 @@ func ListHandler(c *gin.Context) {
 	defer span.End()
 
 	user := c.MustGet("principal").(*Principal).ID
-	streaming := c.Request.URL.Query().Get("stream")
+	streaming := false
+	if upgradeHeader, ok := c.Request.Header["Upgrade"]; ok {
+		for _, upgrade := range upgradeHeader {
+			if upgrade == "websocket" {
+				streaming = true
+			}
+		}
+	}
 
-	if streaming != "true" {
+	if !streaming {
 		result, err := List(ctx, user)
 		if err != nil {
 			log.Printf("error: %v\n", err)
@@ -90,9 +97,16 @@ func GetHandler(c *gin.Context) {
 	user := c.MustGet("principal").(*Principal).ID
 
 	key := c.Param("key")
-	streaming := c.Request.URL.Query().Get("stream")
+	streaming := false
+	if upgradeHeader, ok := c.Request.Header["Upgrade"]; ok {
+		for _, upgrade := range upgradeHeader {
+			if upgrade == "websocket" {
+				streaming = true
+			}
+		}
+	}
 
-	if streaming != "true" {
+	if !streaming {
 		result, err := Get(ctx, user, key)
 		if err != nil {
 			log.Printf("error: %v\n", err)
