@@ -56,13 +56,7 @@ func ListHandler(c *gin.Context) {
 		return
 	}
 
-	for k, v := range c.Request.Header {
-		log.Printf("HEADER: %s\n", k)
-		log.Println(v)
-	}
-
 	// Upgrade to websocket stream
-	log.Printf("upgrading HTTP connection for sockets")
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		log.Println(err)
@@ -120,7 +114,6 @@ func GetHandler(c *gin.Context) {
 	}
 
 	// Upgrade to websocket stream
-	log.Printf("upgrading HTTP connection for sockets")
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		log.Println(err)
