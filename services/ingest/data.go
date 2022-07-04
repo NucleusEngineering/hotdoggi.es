@@ -82,9 +82,6 @@ func (ref *DogRef) validate(typeName string) error {
 		if ref.ID == "" {
 			return fmt.Errorf("no reference id given for type: %s", typeName)
 		}
-		if ref.Dog.Location.Latitude == 0.0 || ref.Dog.Location.Longitude == 0.0 {
-			return fmt.Errorf("no positional coordinates give for : %s", typeName)
-		}
 		return nil
 	default:
 		return fmt.Errorf("unrecognized type name received: %s", typeName)

@@ -33,6 +33,9 @@ pack_size = 8
 thread_executor = concurrent.futures.ThreadPoolExecutor(max_workers=pack_size)
 terminate = False
 
+coord_lower_bound = 0
+coord_upper_bound = 7
+
 class colors:
     BLUE = '\033[94m'
     GREEN = '\033[92m'
@@ -83,8 +86,8 @@ def simulateDogMovement(dog):
             "id": dog['id'],
             "dog": {
                 "location": {
-                    "longitude": update['dog']['location']['longitude'] + (0.001 * random.choice((-1, 1))),
-                    "latitude": update['dog']['location']['latitude'] + (0.001 * random.choice((-1, 1)))
+                    "longitude": randomMovement(update['dog']['location']['longitude']),
+                    "latitude": randomMovement(update['dog']['location']['latitude'])
                 }
             } 
         }
@@ -109,6 +112,17 @@ def removeDog(dog):
     if r.status_code != 201:
         print("error publishing event")
 
+def randomMovement(coord):
+    coord += random.choice((-1, 1))
+
+    if coord > coord_upper_bound:
+        coord = coord_upper_bound
+
+    if coord < coord_lower_bound:
+        coord = coord_lower_bound
+    
+    return coord
+
 def randomName():
     names = ["Max","Kobe","Oscar","Cooper","Oakley","Mac","Charlie","Rex","Rudy","Teddy","Ailey","Chip","Bear","Cash","Walter","Milo","Jasper","Blaze","Bentley","Bo","Ozzy","Ollie","Boomer","Odin","Buddy","Lucky","Axel","Rocky","Ruger","Bruce","Leo","Beau","Odie","Zeus","Baxter","Arlo","Duke","Oreo","Echo","Finn","Gunner","Tank","Apollo","Henry","Romeo","Murphy","Simba","Porter","Diesel","George","Harley","Toby","Coco","Otis","Louie","Rocket","Rocco","Tucker","Ziggy","Remi","Jax","Prince","Whiskey","Ace","Shadow","Sam","Jack","Riley","Buster","Koda","Copper","Bubba","Winston","Luke","Jake","Oliver","Marley","Benny","Gus","Zeke","Bowie","Loki","Levi","Dozer","Moose","Benji","Rusty","Archie","Ranger","Joey","Bandit","Remy","Kylo","Scout","Dexter","Ryder","Thor","Gizmo","Tyson","Bruno","Chase","Samson","King","Cody","Rambo","Blue","Sarge","Harry","Atlas","Chester","Gucci","Theo","Maverick","Miles","Jackson","Lincoln","Watson","Hank","Wally","Peanut","Titan"]
     return random.choice(names)
@@ -118,7 +132,7 @@ def randomBreed():
     return random.choice(breeds)
 
 def randomCoordinate():
-    return random.uniform(8.0, 52.0)
+    return random.choice(range(coord_lower_bound, coord_upper_bound+1))
 
 def randomBirthday():
     latest = datetime.today() - timedelta(days=60) # 60 days ago
@@ -148,6 +162,7 @@ def abortHandler(signum, frame):
 signal.signal(signal.SIGINT, abortHandler)
 
 def main():
+    random.seed()
     print("Adding some dogs to the pack...")
     for _ in range(pack_size):
         addRandomDog()
