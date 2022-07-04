@@ -54,6 +54,8 @@ func ListHandler(c *gin.Context) {
 		log.Println(v)
 	}
 
+	c.Request.Header["Connection"] = []string{"upgrade"}
+
 	// Upgrade to websocket stream
 	log.Printf("upgrading HTTP connection for sockets")
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
