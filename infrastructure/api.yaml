@@ -67,7 +67,6 @@ paths:
       operationId: list-dogs
       x-google-backend:
         address: https://hotdoggies-dogs-34td3b3ada-ew.a.run.app
-        protocol: h2
         path_translation: APPEND_PATH_TO_ADDRESS
       responses:
         '200':
@@ -88,7 +87,6 @@ paths:
       operationId: get-dogs
       x-google-backend:
         address: https://hotdoggies-dogs-34td3b3ada-ew.a.run.app
-        protocol: h2
         path_translation: APPEND_PATH_TO_ADDRESS
       responses:
         '200':
