@@ -16,6 +16,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
@@ -81,13 +82,13 @@ type Metadata struct {
 }
 
 // List all dogs
-func List(ctx context.Context) ([]DogRef, error) {
+func List(ctx context.Context, userID string) ([]DogRef, error) {
 	ctx, span := trace.StartSpan(ctx, "dogs.data.list")
 	defer span.End()
 	result := []DogRef{}
 	client := Global["client.firestore"].(*firestore.Client)
 	log.Printf("scanning dogs\n")
-	iter := client.Collection(collectionName).Documents(ctx)
+	iter := client.Collection(collectionName).Where("metadata.owner", "==", userID).Documents(ctx)
 	for {
 		snap, err := iter.Next()
 		if err == iterator.Done {
@@ -108,22 +109,49 @@ func List(ctx context.Context) ([]DogRef, error) {
 }
 
 // ListStream will stream updates for all dogs belonging to a user back on a channel until a quit message is sent.
-func ListStream(ctx context.Context, userID string, dogs chan<- DogRef, quit <-chan bool) error {
+func ListStream(ctx context.Context, userID string, dogs chan<- DogRef) {
 	ctx, span := trace.StartSpan(ctx, "dogs.data.list_stream")
 	defer span.End()
+
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
 	client := Global["client.firestore"].(*firestore.Client)
 
 	log.Printf("streaming dogs for user(%s)\n", userID)
 
-	// TODO implement
-	_ = client
-	_ = ctx
+	iter := client.Collection(collectionName).Where("metadata.owner", "==", userID).Snapshots(ctx)
+	for {
+		snap, err := iter.Next() // this is the blocking listener
+		if err != nil {
+			close(dogs)
+			return
+		}
+		if snap != nil {
+			for _, change := range snap.Changes {
+				switch change.Kind {
+				case firestore.DocumentAdded:
+					// TODO what to do with different types of events?
+					// -> Nothing for now
+				case firestore.DocumentRemoved:
+					// TODO what to do with different types of events?
+					// -> Nothing for now
+				case firestore.DocumentModified:
+					var dog Dog
+					change.Doc.DataTo(&dog)
 
-	return nil
+					dogs <- DogRef{
+						ID:  change.Doc.Ref.ID,
+						Dog: dog,
+					}
+				}
+			}
+		}
+	}
 }
 
 // Get a specific dog
-func Get(ctx context.Context, key string) (DogRef, error) {
+func Get(ctx context.Context, userID string, key string) (DogRef, error) {
 	ctx, span := trace.StartSpan(ctx, "dogs.data.get")
 	defer span.End()
 	client := Global["client.firestore"].(*firestore.Client)
@@ -136,6 +164,10 @@ func Get(ctx context.Context, key string) (DogRef, error) {
 	var dog Dog
 	snap.DataTo(&dog)
 
+	if dog.Metadata.Owner != userID {
+		return DogRef{}, fmt.Errorf("dog not owned by user %v", userID)
+	}
+
 	return DogRef{
 		ID:  snap.Ref.ID,
 		Dog: dog,
@@ -143,18 +175,39 @@ func Get(ctx context.Context, key string) (DogRef, error) {
 }
 
 // GetStream will stream updates for a specific dog back on a channel until a quit message is sent.
-func GetStream(ctx context.Context, key string, dogs chan<- DogRef, quit <-chan bool) error {
+func GetStream(ctx context.Context, userID string, key string, dogs chan<- DogRef) {
 	ctx, span := trace.StartSpan(ctx, "dogs.data.get_stream")
 	defer span.End()
+
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
 	client := Global["client.firestore"].(*firestore.Client)
 
-	log.Printf("streaming dog(%s)\n", key)
+	log.Printf("streaming updates for dog(%s)\n", userID)
 
-	// TODO implement
-	_ = client
-	_ = ctx
+	iter := client.Collection(collectionName).Doc(key).Snapshots(ctx)
+	for {
+		snap, err := iter.Next() // this is the blocking listener
+		if err != nil {
+			close(dogs)
+			return
+		}
+		if snap != nil {
+			var dog Dog
+			snap.DataTo(&dog)
+			dogRef := DogRef{
+				ID:  snap.Ref.ID,
+				Dog: dog,
+			}
 
-	return nil
+			if dogRef.Dog.Metadata.Owner != userID {
+				close(dogs)
+				return
+			}
+			dogs <- dogRef
+		}
+	}
 }
 
 // Add a specific dog

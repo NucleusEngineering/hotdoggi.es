@@ -21,8 +21,11 @@ import (
 	"net/http"
 
 	gin "github.com/gin-gonic/gin"
+	websocket "github.com/gorilla/websocket"
 	trace "go.opencensus.io/trace"
 )
+
+var upgrader = websocket.Upgrader{}
 
 // ListHandler implements GET /
 func ListHandler(c *gin.Context) {
@@ -30,15 +33,47 @@ func ListHandler(c *gin.Context) {
 	ctx, span := trace.StartSpan(ctx, "dogs.handler.list")
 	defer span.End()
 
-	result, err := List(ctx)
-	if err != nil {
-		log.Printf("error: %v\n", err)
-		c.JSON(http.StatusServiceUnavailable, gin.H{
-			"error": fmt.Sprintf("failed to retrieve objects: %v", err),
-		})
+	user := c.MustGet("principal").(*Principal).ID
+	streaming := c.Request.URL.Query().Get("stream")
+
+	if streaming != "true" {
+		result, err := List(ctx, user)
+		if err != nil {
+			log.Printf("error: %v\n", err)
+			c.JSON(http.StatusServiceUnavailable, gin.H{
+				"error": fmt.Sprintf("failed to retrieve objects: %v", err),
+			})
+			return
+		}
+		c.JSON(http.StatusOK, result)
 		return
 	}
-	c.JSON(http.StatusOK, result)
+
+	// Upgrade to websocket stream
+	log.Printf("upgrading HTTP connection for sockets")
+	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	defer conn.Close()
+
+	dogs := make(chan DogRef)
+	go ListStream(ctx, user, dogs)
+
+	for {
+		//Response message to client
+		dogRef, ok := <-dogs
+		if !ok {
+			conn.WriteJSON(fmt.Errorf("failed to stream dogs"))
+			conn.Close()
+		}
+		err = conn.WriteJSON(dogRef)
+		if err != nil {
+			log.Println(err)
+			break
+		}
+	}
 }
 
 // GetHandler implements GET /{key}
@@ -47,16 +82,50 @@ func GetHandler(c *gin.Context) {
 	ctx, span := trace.StartSpan(ctx, "dogs.handler.get")
 	defer span.End()
 
+	user := c.MustGet("principal").(*Principal).ID
+
 	key := c.Param("key")
-	result, err := Get(ctx, key)
-	if err != nil {
-		log.Printf("error: %v\n", err)
-		c.JSON(http.StatusServiceUnavailable, gin.H{
-			"error": fmt.Sprintf("failed to retrieve object: %v", err),
-		})
+	streaming := c.Request.URL.Query().Get("stream")
+
+	if streaming != "true" {
+		result, err := Get(ctx, user, key)
+		if err != nil {
+			log.Printf("error: %v\n", err)
+			c.JSON(http.StatusServiceUnavailable, gin.H{
+				"error": fmt.Sprintf("failed to retrieve object: %v", err),
+			})
+			return
+		}
+		c.JSON(http.StatusOK, result)
 		return
 	}
-	c.JSON(http.StatusOK, result)
+
+	// Upgrade to websocket stream
+	log.Printf("upgrading HTTP connection for sockets")
+	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	defer conn.Close()
+
+	dogs := make(chan DogRef)
+	go GetStream(ctx, user, key, dogs)
+
+	for {
+		//Response message to client
+		dogRef, ok := <-dogs
+		if !ok {
+			conn.WriteJSON(fmt.Errorf("failed to stream updates for dog"))
+			conn.Close()
+		}
+		err = conn.WriteJSON(dogRef)
+		if err != nil {
+			log.Println(err)
+			break
+		}
+	}
+
 }
 
 // EventHandler implements POST /
@@ -125,12 +194,9 @@ func dogAdded(ctx context.Context, c *gin.Context, caller *Principal, dog Dog) e
 func dogRemoved(ctx context.Context, c *gin.Context, caller *Principal, ref *DogRef) error {
 	ctx, span := trace.StartSpan(ctx, "dogs.handler.event.removed")
 	defer span.End()
-	existing, err := Get(ctx, ref.ID)
+	_, err := Get(ctx, caller.ID, ref.ID)
 	if err != nil {
 		return err
-	}
-	if existing.Dog.Metadata.Owner != caller.ID {
-		return fmt.Errorf("refusing to remove dog. Dog not owned by caller")
 	}
 
 	err = Delete(ctx, ref.ID)
@@ -140,12 +206,9 @@ func dogRemoved(ctx context.Context, c *gin.Context, caller *Principal, ref *Dog
 func dogUpdated(ctx context.Context, c *gin.Context, caller *Principal, ref *DogRef) error {
 	ctx, span := trace.StartSpan(ctx, "dogs.handler.event.updated")
 	defer span.End()
-	existing, err := Get(ctx, ref.ID)
+	_, err := Get(ctx, caller.ID, ref.ID)
 	if err != nil {
 		return err
-	}
-	if existing.Dog.Metadata.Owner != caller.ID {
-		return fmt.Errorf("refusing to update dog. Dog not owned by caller")
 	}
 	_, err = Update(ctx, ref.ID, ref.Dog)
 	return err
@@ -154,12 +217,9 @@ func dogUpdated(ctx context.Context, c *gin.Context, caller *Principal, ref *Dog
 func dogMoved(ctx context.Context, c *gin.Context, caller *Principal, ref *DogRef, lat float32, long float32) error {
 	ctx, span := trace.StartSpan(ctx, "dogs.handler.event.updated")
 	defer span.End()
-	existing, err := Get(ctx, ref.ID)
+	existing, err := Get(ctx, caller.ID, ref.ID)
 	if err != nil {
 		return err
-	}
-	if existing.Dog.Metadata.Owner != caller.ID {
-		return fmt.Errorf("refusing to move dog. Dog not owned by caller")
 	}
 
 	existing.Dog.Location.Latitude = lat
