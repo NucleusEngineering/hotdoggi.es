@@ -2,9 +2,10 @@
 
 curl --include \
      --no-buffer \
+     --header "Authorization: Bearer ${TOKEN}" \
      --header "Connection: Upgrade" \
      --header "Upgrade: websocket" \
-     --header "Host: 0.0.0.0:8080" \
+     --header "Host: api.hotdoggies.stamer.demo.altostrat.com" \
      --header "Sec-WebSocket-Key: SGVsbG8sIHdvcmxkIQ==" \
      --header "Sec-WebSocket-Version: 13" \
-     http://0.0.0.0:8080/dogs?stream=true
+     https://api.hotdoggies.stamer.demo.altostrat.com/dogs/?stream=true

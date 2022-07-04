@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM gcr.io/endpoints-release/endpoints-runtime-serverless:2
+FROM gcr.io/endpoints-release/endpoints-runtime-serverless:2.37.0
 USER root
 ENV ENDPOINTS_SERVICE_PATH /etc/endpoints/service.json
 COPY service.json /etc/endpoints/service.json
