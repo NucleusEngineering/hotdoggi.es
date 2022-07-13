@@ -26,6 +26,9 @@ func main() {
 	}
 
 	token := os.Getenv("TOKEN")
+	if token == "" {
+		log.Fatalln("no credentials provided in $TOKEN")
+	}
 	socket.RequestHeader.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 
 	socket.RequestHeader.Set("Accept-Encoding", "gzip, deflate, sdch")
@@ -34,26 +37,24 @@ func main() {
 	socket.RequestHeader.Set("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/49.0.2623.87 Safari/537.36")
 
 	socket.OnConnectError = func(err error, socket gowebsocket.Socket) {
-		log.Fatal("Received connect error ", err)
+		log.Fatal(">>> Received connect error ", err)
 	}
 	socket.OnConnected = func(socket gowebsocket.Socket) {
-		log.Println("Connected to server")
+		log.Println(">>> Connected to server")
 	}
 	socket.OnTextMessage = func(message string, socket gowebsocket.Socket) {
-		log.Println("Received message  " + message)
-	}
-	socket.OnPingReceived = func(data string, socket gowebsocket.Socket) {
-		log.Println("Recieved ping " + data)
+		// TODO deserialize and pretty print
+		log.Println("" + message)
 	}
 	socket.OnDisconnected = func(err error, socket gowebsocket.Socket) {
-		log.Println("Disconnected from server")
+		log.Println(">>> Disconnected from server")
 	}
 	socket.Connect()
 
 	for {
 		select {
 		case <-interrupt:
-			log.Println("interrupt")
+			log.Println(">>> Exiting ...")
 			socket.Close()
 			return
 		}

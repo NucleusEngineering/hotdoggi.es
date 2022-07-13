@@ -29,6 +29,10 @@ The segregation is enforced at the API layer. Resources known to the API continu
 
 ![Command Query Responsibility Segregation](diagrams/cqrs.png)
 
+Read-only queries can be seamlessly upgraded to streaming Websocket connections. The endpoints do not change and the methods are the same as for regular, short-lived HTTP requests. The client can simply initiate a Websocket connection upgrade by including the necessart HTTP headers. The API will then respond with an HTTP 101 status and signal that it's ready to upgrade to HTTP/2 for websocket streaming connections in which the server will continuously stream the same JSON-serialized objects for updated objects back to the client.
+
+![Websocket Upgrading](diagrams/websockets.png)
+
 ### Event-Sourcing and CloudEvents.io
 
 This demo application implements event-sourcing. Every change to the state of the system and its databases is ingested as an event. All events are validated and are transactionally-safe inserted into an event-log before being exposed to the rest of the system for processing. The entire state of the system can be reproduced by replaying events. Its easy to create separate, isolated environments and fan-out or replay events into these for testing purposes.

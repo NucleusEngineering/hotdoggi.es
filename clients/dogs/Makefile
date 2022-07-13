@@ -12,39 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-all: analytics archiver ingest services app
+all: install
 
-deploy:
-	make -C infrastructure init apply
-
-destroy:
-	make -C infrastructure destroy
-
-proxy:
-	make -C services/proxy build
-
-dogs:
-	make -C services/dogs build
-
-analytics:
-	make -C services/analytics build
-
-archiver:
-	make -C services/archiver build
-
-ingest:
-	make -C services/ingest build
-
-trigger:
-	make -C services/trigger build
-
-client:
-	make -C clients/dogs install
-
-load:
-	@clear
-	python3 loader/loader.py
-
-services: dogs
-
-.PHONY: static deploy destroy proxy services dogs analytics archiver ingest trigger client
+install:
+	go install
+	
+.PHONY: install
