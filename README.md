@@ -29,6 +29,8 @@ The segregation is enforced at the API layer. Resources known to the API continu
 
 ![Command Query Responsibility Segregation](diagrams/cqrs.png)
 
+### Websockets
+
 Read-only queries can be seamlessly upgraded to streaming Websocket connections. The endpoints do not change and the methods are the same as for regular, short-lived HTTP requests. The client can simply initiate a Websocket connection upgrade by including the necessart HTTP headers. The API will then respond with an HTTP 101 status and signal that it's ready to upgrade to HTTP/2 for websocket streaming connections in which the server will continuously stream the same JSON-serialized objects for updated objects back to the client.
 
 ![Websocket Upgrading](diagrams/websockets.png)
@@ -110,7 +112,14 @@ The combination of push-subscriptions delivered into highly elastic, autoscaled 
 
 ### End-user & Service-to-Service Authentication 
 
-TODO: lorem ipsum
+The application follows a strong, identity-based authentication flow in which nothing is trusted and each end-user or service-to-service invokation is validated and verified.
+
+Each invokation originating from outside of Google Cloud needs to be authenticated with `Authorization: bearer $TOKEN` headers. These tokens need to be obtained by authenticating with username/password or with one of the configured social login providers which currently are Google and Github. Hotdoggi.es uses [Identity Platform](https://cloud.google.com/identity-platform) and there are many more social login providers available. The [hotdoggi.es frontend](https://hotdoggies.stamer.demo.altostrat.com/) implements the authentication flow using the Firebase Authentication libraries.
+
+All inbound requests are routed through the ESPv2 endpoint proxy which will inspect and verify issued tokens with Identity Platform before passing them onto the downstream services. Once authenticated, the original authorization headers are moved to `X-Forwarded-Authorization` and the proxy uses it's service account to obtain it's own token to be put into `Authorization: bearer $TOKEN` headers. This effectively encapsulates and forwards the original end-user authentication between client and proxy and uses service-to-service authentication between the proxy and downstream services like `dogs`.
+
+The Cloud Run service running the proxy allows unauthenticated invokations, meaning that Cloud Run is not checking supplied credentials, but the running ESPv2 container will. The downstream services like `dogs` require authentication and Cloud Run will check authorization headers before passing inbound requests to the actual service code. This ensures strong service-to-service authentication and checks for authorization, too: Only the proxy's service account identity is allowed to directly invoke the downstream services. It can't be called directly from anywhere else/with any other identity, hence end-user authentication via the proxy is absolutely required.
 
 ![End-User Authentication with Identity Platform and Encapsulated Tokens in Service-to-Service Communications](diagrams/authentication.png)
 
+Additionally, services in hotdoggi.es will occasionally require communication with Google Cloud services and APIs. For example, the `dogs` service needs to query items in Firestore and each interaction with the APIs need to be authenticated in a similar fashion. Each service is using a non-standard service account which is given exact permissions to be able to it's job.
