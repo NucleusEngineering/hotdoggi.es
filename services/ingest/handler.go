@@ -23,13 +23,15 @@ import (
 
 	firestore "cloud.google.com/go/firestore"
 	gin "github.com/gin-gonic/gin"
-	trace "go.opencensus.io/trace"
+
+	trace "go.opentelemetry.io/otel/trace"
 )
 
 // EventHandler implements POSTing events
 func EventHandler(c *gin.Context) {
 	ctx := c.MustGet("trace.context").(context.Context)
-	ctx, span := trace.StartSpan(ctx, "ingest.handler.event")
+	tracer := Global["client.trace.tracer"].(*trace.Tracer)
+	ctx, span := (*tracer).Start(ctx, "ingest.handler:event")
 	defer span.End()
 
 	err := validate(ctx, c)
@@ -55,7 +57,8 @@ func EventHandler(c *gin.Context) {
 }
 
 func validate(ctx context.Context, c *gin.Context) error {
-	_, span := trace.StartSpan(ctx, "ingest.validate")
+	tracer := Global["client.trace.tracer"].(*trace.Tracer)
+	_, span := (*tracer).Start(ctx, "ingest.data:validate")
 	defer span.End()
 
 	sourceName := c.Param("source")
@@ -93,7 +96,8 @@ func validate(ctx context.Context, c *gin.Context) error {
 }
 
 func commit(ctx context.Context, c *gin.Context) (*firestore.DocumentRef, error) {
-	ctx, span := trace.StartSpan(ctx, "ingest.commit")
+	tracer := Global["client.trace.tracer"].(*trace.Tracer)
+	ctx, span := (*tracer).Start(ctx, "ingest.data:commit")
 	defer span.End()
 
 	client := Global["client.firestore"].(*firestore.Client)
@@ -102,10 +106,10 @@ func commit(ctx context.Context, c *gin.Context) (*firestore.DocumentRef, error)
 	sourceName := c.MustGet("event.source").(string)
 	data := c.MustGet("event.data").(*DogRef)
 
-	traceparent := fmt.Sprintf("00-%s-%s-0%d",
-		span.SpanContext().TraceID.String(),
-		span.SpanContext().SpanID.String(),
-		span.SpanContext().TraceOptions,
+	traceparent := fmt.Sprintf("00-%s-%s-%s",
+		span.SpanContext().TraceID().String(),
+		span.SpanContext().SpanID().String(),
+		span.SpanContext().TraceFlags().String(),
 	)
 
 	payload := EventData{

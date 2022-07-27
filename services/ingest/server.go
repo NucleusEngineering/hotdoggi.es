@@ -16,13 +16,22 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 
 	firestore "cloud.google.com/go/firestore"
-	stackdriver "contrib.go.opencensus.io/exporter/stackdriver"
 	gin "github.com/gin-gonic/gin"
-	trace "go.opencensus.io/trace"
+
+	exporter "github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/trace"
+	otel "go.opentelemetry.io/otel"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	trace "go.opentelemetry.io/otel/trace"
+)
+
+const (
+	prefixIdentifier string = "es.hotdoggi"
+	serviceName      string = "ingest"
 )
 
 // Global map for shared resources
@@ -32,8 +41,8 @@ func main() {
 	ctx := context.Background()
 	configure(ctx)
 
-	exporter := Global["client.trace"].(*stackdriver.Exporter)
-	defer exporter.StopMetricsExporter()
+	provider := Global["client.trace.provider"].(*sdktrace.TracerProvider)
+	defer provider.ForceFlush(ctx)
 
 	router := gin.Default()
 	events := router.Group("/events")
@@ -41,7 +50,8 @@ func main() {
 	{
 		events.POST("/:type/:source", EventHandler)
 	}
-	router.Run()
+	log.Println("Starting server.")
+	log.Fatalf("error: %v", router.Run())
 }
 
 func configure(ctx context.Context) {
@@ -62,21 +72,38 @@ func configure(ctx context.Context) {
 		log.Fatal("failed to read GOOGLE_CLOUD_PROJECT")
 	}
 	Global["client.firestore"] = createFirestoreClient(ctx)
-	Global["client.trace"] = createTraceExporter(ctx)
+	Global["client.trace.exporter"] = createTraceExporter(ctx)
+	Global["client.trace.provider"] = createTraceProvider(ctx)
+	Global["client.trace.tracer"] = createTracer(ctx)
+	log.Println("Configuration complete.")
 }
 
-func createTraceExporter(ctx context.Context) *stackdriver.Exporter {
+func createTraceExporter(ctx context.Context) *exporter.Exporter {
 	projectID := Global["project.id"].(string)
-	exporter, err := stackdriver.NewExporter(stackdriver.Options{
-		ProjectID: projectID,
-	})
+	exporter, err := exporter.New(exporter.WithProjectID(projectID))
 	if err != nil {
 		log.Fatalf("failed to create trace exporter: %v", err)
 	}
-	trace.RegisterExporter(exporter)
-	trace.ApplyConfig(trace.Config{DefaultSampler: trace.ProbabilitySampler(0.1)})
-	exporter.StartMetricsExporter()
+
 	return exporter
+}
+
+func createTraceProvider(ctx context.Context) *sdktrace.TracerProvider {
+	exporter := Global["client.trace.exporter"].(*exporter.Exporter)
+
+	// Probabilistic trace exporter in PROD
+	provider := sdktrace.NewTracerProvider(sdktrace.WithSampler(sdktrace.TraceIDRatioBased(0.01)))
+	// AlwaysOn trace exporter in DEV
+	if Global["environment"].(string) == "dev" {
+		provider = sdktrace.NewTracerProvider(sdktrace.WithBatcher(exporter))
+	}
+	otel.SetTracerProvider(provider)
+	return provider
+}
+
+func createTracer(ctx context.Context) *trace.Tracer {
+	tracer := otel.GetTracerProvider().Tracer(fmt.Sprintf("%s.service.%s/", prefixIdentifier, serviceName))
+	return &tracer
 }
 
 func createFirestoreClient(ctx context.Context) *firestore.Client {
