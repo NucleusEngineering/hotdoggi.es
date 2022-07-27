@@ -17,10 +17,13 @@ module main
 go 1.16
 
 require (
+	cloud.google.com/go v0.102.1 // indirect
 	cloud.google.com/go/firestore v1.5.0
-	contrib.go.opencensus.io/exporter/stackdriver v0.13.6
+	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/trace v1.8.3
 	github.com/gin-gonic/gin v1.7.1
-	github.com/google/go-cmp v0.5.5 // indirect
-	github.com/stretchr/testify v1.7.0 // indirect
-	go.opencensus.io v0.23.0
+	go.opentelemetry.io/otel v1.8.0
+	go.opentelemetry.io/otel/sdk v1.8.0
+	go.opentelemetry.io/otel/trace v1.8.0
+	google.golang.org/api v0.86.0 // indirect
+	google.golang.org/genproto v0.0.0-20220706132729-d86698d07c53 // indirect
 )

@@ -16,18 +16,24 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
-	"net/http"
 	"os"
 
 	firestore "cloud.google.com/go/firestore"
-	stackdriver "contrib.go.opencensus.io/exporter/stackdriver"
 	firebase "firebase.google.com/go/v4"
 	auth "firebase.google.com/go/v4/auth"
 	gin "github.com/gin-gonic/gin"
-	ochttp "go.opencensus.io/plugin/ochttp"
-	propagation "go.opencensus.io/plugin/ochttp/propagation/b3"
-	trace "go.opencensus.io/trace"
+
+	exporter "github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/trace"
+	otel "go.opentelemetry.io/otel"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	trace "go.opentelemetry.io/otel/trace"
+)
+
+const (
+	prefixIdentifier string = "es.hotdoggi"
+	serviceName      string = "dogs"
 )
 
 // Global map for shared resources
@@ -37,8 +43,8 @@ func main() {
 	ctx := context.Background()
 	configure(ctx)
 
-	exporter := Global["client.trace"].(*stackdriver.Exporter)
-	defer exporter.StopMetricsExporter()
+	provider := Global["client.trace.provider"].(*sdktrace.TracerProvider)
+	defer provider.ForceFlush(ctx)
 
 	router := gin.Default()
 	events := router.Group("/events")
@@ -54,7 +60,8 @@ func main() {
 		api.GET("/", ListHandler)
 
 	}
-	router.Run()
+	log.Println("Starting server.")
+	log.Fatalf("error: %v", router.Run())
 }
 
 func configure(ctx context.Context) {
@@ -74,24 +81,40 @@ func configure(ctx context.Context) {
 	if Global["project.id"] == "" {
 		log.Fatal("failed to read GOOGLE_CLOUD_PROJECT")
 	}
-	Global["client.http"] = createHTTPClient(ctx)
 	Global["client.firebase"] = createFirebaseClient(ctx)
 	Global["client.firestore"] = createFirestoreClient(ctx)
-	Global["client.trace"] = createTraceExporter(ctx)
+	Global["client.trace.exporter"] = createTraceExporter(ctx)
+	Global["client.trace.provider"] = createTraceProvider(ctx)
+	Global["client.trace.tracer"] = createTracer(ctx)
+	log.Println("Configuration complete.")
 }
 
-func createTraceExporter(ctx context.Context) *stackdriver.Exporter {
+func createTraceExporter(ctx context.Context) *exporter.Exporter {
 	projectID := Global["project.id"].(string)
-	exporter, err := stackdriver.NewExporter(stackdriver.Options{
-		ProjectID: projectID,
-	})
+	exporter, err := exporter.New(exporter.WithProjectID(projectID))
 	if err != nil {
 		log.Fatalf("failed to create trace exporter: %v", err)
 	}
-	trace.RegisterExporter(exporter)
-	trace.ApplyConfig(trace.Config{DefaultSampler: trace.ProbabilitySampler(0.1)})
-	exporter.StartMetricsExporter()
+
 	return exporter
+}
+
+func createTraceProvider(ctx context.Context) *sdktrace.TracerProvider {
+	exporter := Global["client.trace.exporter"].(*exporter.Exporter)
+
+	// Probabilistic trace exporter in PROD
+	provider := sdktrace.NewTracerProvider(sdktrace.WithSampler(sdktrace.TraceIDRatioBased(0.01)))
+	// AlwaysOn trace exporter in DEV
+	if Global["environment"].(string) == "dev" {
+		provider = sdktrace.NewTracerProvider(sdktrace.WithBatcher(exporter))
+	}
+	otel.SetTracerProvider(provider)
+	return provider
+}
+
+func createTracer(ctx context.Context) *trace.Tracer {
+	tracer := otel.GetTracerProvider().Tracer(fmt.Sprintf("%s.service.%s/", prefixIdentifier, serviceName))
+	return &tracer
 }
 
 func createFirestoreClient(ctx context.Context) *firestore.Client {
@@ -112,15 +135,6 @@ func createFirebaseClient(ctx context.Context) *auth.Client {
 	client, err := app.Auth(ctx)
 	if err != nil {
 		log.Fatalf("failed to create firebase client: %v", err)
-	}
-	return client
-}
-
-func createHTTPClient(ctx context.Context) *http.Client {
-	client := &http.Client{
-		Transport: &ochttp.Transport{
-			Propagation: &propagation.HTTPFormat{},
-		},
 	}
 	return client
 }

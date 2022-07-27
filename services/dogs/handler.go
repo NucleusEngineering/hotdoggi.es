@@ -22,7 +22,7 @@ import (
 
 	gin "github.com/gin-gonic/gin"
 	websocket "github.com/gorilla/websocket"
-	trace "go.opencensus.io/trace"
+	trace "go.opentelemetry.io/otel/trace"
 )
 
 var upgrader = websocket.Upgrader{}
@@ -30,7 +30,8 @@ var upgrader = websocket.Upgrader{}
 // ListHandler implements GET /
 func ListHandler(c *gin.Context) {
 	ctx := c.MustGet("trace.context").(context.Context)
-	ctx, span := trace.StartSpan(ctx, "dogs.handler.list")
+	tracer := Global["client.trace.tracer"].(*trace.Tracer)
+	ctx, span := (*tracer).Start(ctx, "dogs.handler:list")
 	defer span.End()
 
 	user := c.MustGet("principal").(*Principal).ID
@@ -57,6 +58,9 @@ func ListHandler(c *gin.Context) {
 	}
 
 	// Upgrade to websocket stream
+	ctx, span = (*tracer).Start(ctx, "dogs.handler:list#streaming")
+	defer span.End()
+
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		log.Println(err)
@@ -85,7 +89,8 @@ func ListHandler(c *gin.Context) {
 // GetHandler implements GET /{key}
 func GetHandler(c *gin.Context) {
 	ctx := c.MustGet("trace.context").(context.Context)
-	ctx, span := trace.StartSpan(ctx, "dogs.handler.get")
+	tracer := Global["client.trace.tracer"].(*trace.Tracer)
+	ctx, span := (*tracer).Start(ctx, "dogs.handler:get")
 	defer span.End()
 
 	user := c.MustGet("principal").(*Principal).ID
@@ -114,6 +119,9 @@ func GetHandler(c *gin.Context) {
 	}
 
 	// Upgrade to websocket stream
+	ctx, span = (*tracer).Start(ctx, "dogs.handler:get#streaming")
+	defer span.End()
+
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		log.Println(err)
@@ -137,13 +145,13 @@ func GetHandler(c *gin.Context) {
 			break
 		}
 	}
-
 }
 
 // EventHandler implements POST /
 func EventHandler(c *gin.Context) {
 	ctx := c.MustGet("trace.context").(context.Context)
-	ctx, span := trace.StartSpan(ctx, "dogs.handler.event")
+	tracer := Global["client.trace.tracer"].(*trace.Tracer)
+	ctx, span := (*tracer).Start(ctx, "dogs.handler:event")
 	defer span.End()
 
 	typeName := c.MustGet("event.type").(string)
@@ -194,7 +202,8 @@ func EventHandler(c *gin.Context) {
 }
 
 func dogAdded(ctx context.Context, c *gin.Context, caller *Principal, dog Dog) error {
-	ctx, span := trace.StartSpan(ctx, "dogs.handler.event.added")
+	tracer := Global["client.trace.tracer"].(*trace.Tracer)
+	ctx, span := (*tracer).Start(ctx, "dogs.handler:event:added")
 	defer span.End()
 
 	dog.Metadata.Owner = caller.ID
@@ -204,7 +213,8 @@ func dogAdded(ctx context.Context, c *gin.Context, caller *Principal, dog Dog) e
 }
 
 func dogRemoved(ctx context.Context, c *gin.Context, caller *Principal, ref *DogRef) error {
-	ctx, span := trace.StartSpan(ctx, "dogs.handler.event.removed")
+	tracer := Global["client.trace.tracer"].(*trace.Tracer)
+	ctx, span := (*tracer).Start(ctx, "dogs.handler:event:removed")
 	defer span.End()
 	_, err := Get(ctx, caller.ID, ref.ID)
 	if err != nil {
@@ -216,7 +226,8 @@ func dogRemoved(ctx context.Context, c *gin.Context, caller *Principal, ref *Dog
 }
 
 func dogUpdated(ctx context.Context, c *gin.Context, caller *Principal, ref *DogRef) error {
-	ctx, span := trace.StartSpan(ctx, "dogs.handler.event.updated")
+	tracer := Global["client.trace.tracer"].(*trace.Tracer)
+	ctx, span := (*tracer).Start(ctx, "dogs.handler:event:updated")
 	defer span.End()
 	_, err := Get(ctx, caller.ID, ref.ID)
 	if err != nil {
@@ -227,7 +238,8 @@ func dogUpdated(ctx context.Context, c *gin.Context, caller *Principal, ref *Dog
 }
 
 func dogMoved(ctx context.Context, c *gin.Context, caller *Principal, ref *DogRef, lat float32, long float32) error {
-	ctx, span := trace.StartSpan(ctx, "dogs.handler.event.updated")
+	tracer := Global["client.trace.tracer"].(*trace.Tracer)
+	ctx, span := (*tracer).Start(ctx, "dogs.handler:event:moved")
 	defer span.End()
 	existing, err := Get(ctx, caller.ID, ref.ID)
 	if err != nil {

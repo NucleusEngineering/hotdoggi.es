@@ -17,6 +17,9 @@ require 'functions_framework'
 require 'opencensus-stackdriver'
 require 'cloud_events'
 
+PREFIX_IDENTIFIER = "es.hotdoggi"
+SERVICE_NAME = "trigger"
+
 FunctionsFramework.on_startup do
   # Create clients
   set_global :firestore_client do
@@ -33,6 +36,9 @@ FunctionsFramework.on_startup do
 end
 
 FunctionsFramework.cloud_event 'function' do |fs_event|
+
+  prefix = "#{PREFIX_IDENTIFIER}.services.#{SERVICE_NAME}/"
+
   # Pickup W3C trace context
   traceparent = fs_event.data['value']['fields']['traceparent']['stringValue']
   trace_context = OpenCensus::Trace::TraceContextData.new(
@@ -42,13 +48,13 @@ FunctionsFramework.cloud_event 'function' do |fs_event|
   )
   trace = OpenCensus::Trace::SpanContext.create_root(trace_context: trace_context)
 
-  trace.in_span 'trigger.handler.event' do |_span|
+  trace.in_span "#{prefix}trigger.handler:event" do |_span|
     event_type = fs_event.subject.split('/')[-2]
     event_id = fs_event.subject.split('/')[-1]
     logger.info "detected change to: #{event_type}:#{event_id}"
 
     event = nil
-    trace.in_span 'trigger.load' do |_subspan|
+    trace.in_span "#{prefix}trigger.data:load" do |_subspan|
       doc = global(:firestore_client).col(event_type).doc(event_id).get
       event = CloudEvents::Event.create(
         id: event_id,
@@ -64,7 +70,7 @@ FunctionsFramework.cloud_event 'function' do |fs_event|
       logger.info "received event: #{event.to_h}"
     end
 
-    trace.in_span 'trigger.publish' do |_subspan|
+    trace.in_span "#{prefix}trigger.message:publish" do |_subspan|
       topic = global(:pubsub_client).topic ENV['TOPIC']
       result = topic.publish event.to_h.to_json,
         type: event.type,

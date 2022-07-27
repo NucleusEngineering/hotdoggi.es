@@ -22,12 +22,16 @@ import (
 	"net/http"
 
 	gin "github.com/gin-gonic/gin"
+	trace "go.opentelemetry.io/otel/trace"
 )
 
 // UserContextFromAPI implements a middleware that resolves embedded user context info
 // passed in from firebase authentication at the service proxy layer.
 func UserContextFromAPI(c *gin.Context) {
+	tracer := Global["client.trace.tracer"].(*trace.Tracer)
 	ctx := c.Request.Context()
+	ctx, span := (*tracer).Start(ctx, "ingest.context:api")
+	defer span.End()
 	c.Set("trace.context", ctx)
 
 	// Skip verification in non-prod

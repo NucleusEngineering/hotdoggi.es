@@ -22,22 +22,30 @@ from cloudevents.http import CloudEvent, from_json, to_json
 
 from google.cloud import storage
 
-from opencensus.ext.stackdriver import trace_exporter as stackdriver_exporter
-from opencensus.trace.propagation import trace_context_http_header_format
-import opencensus.trace.tracer
+from opentelemetry import trace
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.sampling import StaticSampler, TraceIdRatioBased, Decision
+from opentelemetry.exporter.cloud_trace import CloudTraceSpanExporter
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
+
+PREFIX_IDENTIFIER = "es.hotdoggi"
+SERVICE_NAME = "archiver"
 
 app = Flask(__name__)
 
 @app.route("/events/", methods=["POST"])
 def index():
     event = unwrap(request)
-    tracer = pickup_trace(event["traceparent"])
-    with tracer.span(name="archiver.handler.event"):
+    tracer = create_tracer()
+    ctx = parent_context(event["traceparent"])
+
+    with tracer.start_as_current_span("archiver.handler:event", context=ctx):
         identifier = event["id"]
         type_name = event["type"]
         print(f"processing event: {identifier}")
 
-        with tracer.span(name="archiver.write"):
+        with tracer.start_as_current_span("analytics.data:write", context=ctx):
             client = storage.Client()
             bucket = client.bucket(os.environ["ARCHIVAL_BUCKET"])
             blob = bucket.blob(f"{type_name}/{identifier}")
@@ -56,25 +64,31 @@ def index():
 
     return ("", 204)
 
+def create_tracer():
+    # Default to PROD
+    sampler = TraceIdRatioBased(1/100)
+    if os.getenv("ENVIRONMENT") == "dev":
+        # Always sample in DEV
+        sampler = StaticSampler(Decision(True))
 
-def pickup_trace(traceparent):
-    exporter = stackdriver_exporter.StackdriverExporter(
-        project_id=os.environ["GOOGLE_CLOUD_PROJECT"]
+    tracer_provider = TracerProvider(sampler=sampler)
+    cloud_trace_exporter = CloudTraceSpanExporter()
+    tracer_provider.add_span_processor(
+        BatchSpanProcessor(cloud_trace_exporter)
     )
-    propagator = trace_context_http_header_format.TraceContextPropagator()
-    headers = {
-        "traceparent": traceparent
-    }
-    span_context = propagator.from_headers(headers)
-    tracer = opencensus.trace.tracer.Tracer(
-        span_context=span_context,
-        exporter=exporter
-    )
-
-    print(f"picked up trace: {tracer.span_context.trace_id}")
-    print(f"picked up span: {tracer.span_context.span_id}")
+    trace.set_tracer_provider(tracer_provider)
+    tracer = trace.get_tracer(f"${PREFIX_IDENTIFIER}.service.${SERVICE_NAME}/")
 
     return tracer
+
+
+def parent_context(traceparent):
+    carrier = {'traceparent': traceparent}
+    ctx = TraceContextTextMapPropagator().extract(carrier=carrier)
+    
+    print(f"picked up trace: {ctx}")
+
+    return ctx
 
 
 def unwrap(request):
@@ -101,4 +115,7 @@ def unwrap(request):
 
 
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
+    debug = False
+    if os.getenv("ENVIRONMENT") == "dev":
+        debug = True
+    app.run(debug=debug, host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))

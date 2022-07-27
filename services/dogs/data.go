@@ -21,7 +21,7 @@ import (
 	"time"
 
 	firestore "cloud.google.com/go/firestore"
-	trace "go.opencensus.io/trace"
+	trace "go.opentelemetry.io/otel/trace"
 	iterator "google.golang.org/api/iterator"
 )
 
@@ -83,8 +83,10 @@ type Metadata struct {
 
 // List all dogs
 func List(ctx context.Context, userID string) ([]DogRef, error) {
-	ctx, span := trace.StartSpan(ctx, "dogs.data.list")
+	tracer := Global["client.trace.tracer"].(*trace.Tracer)
+	ctx, span := (*tracer).Start(ctx, "dogs.data:list")
 	defer span.End()
+
 	result := []DogRef{}
 	client := Global["client.firestore"].(*firestore.Client)
 	log.Printf("scanning dogs\n")
@@ -110,7 +112,8 @@ func List(ctx context.Context, userID string) ([]DogRef, error) {
 
 // ListStream will stream updates for all dogs belonging to a user back on a channel until a quit message is sent.
 func ListStream(ctx context.Context, userID string, dogs chan<- DogRef) {
-	ctx, span := trace.StartSpan(ctx, "dogs.data.list_stream")
+	tracer := Global["client.trace.tracer"].(*trace.Tracer)
+	ctx, span := (*tracer).Start(ctx, "dogs.data:list#streaming")
 	defer span.End()
 
 	ctx, cancel := context.WithCancel(ctx)
@@ -152,8 +155,10 @@ func ListStream(ctx context.Context, userID string, dogs chan<- DogRef) {
 
 // Get a specific dog
 func Get(ctx context.Context, userID string, key string) (DogRef, error) {
-	ctx, span := trace.StartSpan(ctx, "dogs.data.get")
+	tracer := Global["client.trace.tracer"].(*trace.Tracer)
+	ctx, span := (*tracer).Start(ctx, "dogs.data:get")
 	defer span.End()
+
 	client := Global["client.firestore"].(*firestore.Client)
 
 	log.Printf("reading dog(%s)\n", key)
@@ -176,7 +181,8 @@ func Get(ctx context.Context, userID string, key string) (DogRef, error) {
 
 // GetStream will stream updates for a specific dog back on a channel until a quit message is sent.
 func GetStream(ctx context.Context, userID string, key string, dogs chan<- DogRef) {
-	ctx, span := trace.StartSpan(ctx, "dogs.data.get_stream")
+	tracer := Global["client.trace.tracer"].(*trace.Tracer)
+	ctx, span := (*tracer).Start(ctx, "dogs.data:get#streaming")
 	defer span.End()
 
 	ctx, cancel := context.WithCancel(ctx)
@@ -212,8 +218,10 @@ func GetStream(ctx context.Context, userID string, key string, dogs chan<- DogRe
 
 // Add a specific dog
 func Add(ctx context.Context, dog Dog) (DogRef, error) {
-	ctx, span := trace.StartSpan(ctx, "dogs.data.add")
+	tracer := Global["client.trace.tracer"].(*trace.Tracer)
+	ctx, span := (*tracer).Start(ctx, "dogs.data:add")
 	defer span.End()
+
 	client := Global["client.firestore"].(*firestore.Client)
 
 	dog.Metadata.Modified = time.Now()
@@ -232,8 +240,10 @@ func Add(ctx context.Context, dog Dog) (DogRef, error) {
 
 // Update a specific dog
 func Update(ctx context.Context, key string, dog Dog) (DogRef, error) {
-	ctx, span := trace.StartSpan(ctx, "dogs.data.update")
+	tracer := Global["client.trace.tracer"].(*trace.Tracer)
+	ctx, span := (*tracer).Start(ctx, "dogs.data:update")
 	defer span.End()
+
 	client := Global["client.firestore"].(*firestore.Client)
 
 	dog.Metadata.Modified = time.Now()
@@ -252,8 +262,10 @@ func Update(ctx context.Context, key string, dog Dog) (DogRef, error) {
 
 // Delete a specific dog
 func Delete(ctx context.Context, key string) error {
-	ctx, span := trace.StartSpan(ctx, "dogs.data.delete")
+	tracer := Global["client.trace.tracer"].(*trace.Tracer)
+	ctx, span := (*tracer).Start(ctx, "dogs.data:delete")
 	defer span.End()
+
 	client := Global["client.firestore"].(*firestore.Client)
 
 	log.Printf("deleting dog(%s)\n", key)
