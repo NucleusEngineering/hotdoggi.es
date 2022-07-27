@@ -24,6 +24,7 @@ import (
 
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	gin "github.com/gin-gonic/gin"
+	"go.opentelemetry.io/otel/propagation"
 	trace "go.opentelemetry.io/otel/trace"
 )
 
@@ -83,9 +84,8 @@ func UserContextFromAPI(c *gin.Context) {
 func ContextFromEvent(c *gin.Context) {
 	tracer := Global["client.trace.tracer"].(*trace.Tracer)
 	ctx := c.Request.Context()
-	ctx, span := (*tracer).Start(ctx, "dogs.context:event")
+	ctx, span := (*tracer).Start(ctx, "dogs.context:event#prehydration")
 	defer span.End()
-	c.Set("trace.context", ctx)
 
 	buffer, err := io.ReadAll(c.Request.Body)
 	if err != nil {
@@ -115,6 +115,21 @@ func ContextFromEvent(c *gin.Context) {
 
 	c.Set("event.type", event.Context.GetType())
 	c.Set("event.source", event.Context.GetSource())
+
+	// Override trace context
+	traceparent, err := event.Context.GetExtension("traceparent")
+	if err != nil {
+		log.Printf("error: %v\n", err)
+		c.JSON(http.StatusNotAcceptable, fmt.Errorf("failed to read traceparent from event context: %v", err))
+		c.Abort()
+		return
+	}
+	ctx = propagation.TraceContext{}.Extract(ctx, propagation.MapCarrier{
+		"traceparent": traceparent.(string),
+	})
+	ctx, span = (*tracer).Start(ctx, "dogs.context:event")
+	defer span.End()
+	c.Set("trace.context", ctx)
 
 	var data EventData
 	err = json.Unmarshal(event.Data(), &data)
