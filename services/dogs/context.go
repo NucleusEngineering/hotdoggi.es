@@ -35,7 +35,11 @@ func UserContextFromAPI(c *gin.Context) {
 	tracer := Global["client.trace.tracer"].(*trace.Tracer)
 	// Explicitly create new context, start of trace
 	ctx := context.Background()
-	ctx, span := (*tracer).Start(ctx, "dogs.context:api")
+	// Create root span
+	ctx, span := (*tracer).Start(ctx, "dogs.context", trace.WithNewRoot())
+	span.End()
+
+	ctx, span = (*tracer).Start(ctx, "dogs.context:api")
 	defer span.End()
 	c.Set("trace.context", ctx)
 
@@ -84,12 +88,6 @@ func UserContextFromAPI(c *gin.Context) {
 // UserContextFromEvent implements a middleware that resolves embedded user context info
 // passed in from the event data.
 func ContextFromEvent(c *gin.Context) {
-	tracer := Global["client.trace.tracer"].(*trace.Tracer)
-	// Explicitly create new context, start of trace
-	ctx := context.Background()
-	ctx, span := (*tracer).Start(ctx, "dogs.context:event#prehydration")
-	defer span.End()
-
 	buffer, err := io.ReadAll(c.Request.Body)
 	if err != nil {
 		log.Printf("error: %v\n", err)
@@ -119,6 +117,7 @@ func ContextFromEvent(c *gin.Context) {
 	c.Set("event.type", event.Context.GetType())
 	c.Set("event.source", event.Context.GetSource())
 
+	// Resume trace
 	// Explicitly override context from original event trace
 	traceparent, err := event.Context.GetExtension("traceparent")
 	if err != nil {
@@ -127,10 +126,11 @@ func ContextFromEvent(c *gin.Context) {
 		c.Abort()
 		return
 	}
-	ctx = propagation.TraceContext{}.Extract(ctx, propagation.MapCarrier{
+	ctx := propagation.TraceContext{}.Extract(context.Background(), propagation.MapCarrier{
 		"traceparent": traceparent.(string),
 	})
-	ctx, span = (*tracer).Start(ctx, "dogs.context:event")
+	tracer := Global["client.trace.tracer"].(*trace.Tracer)
+	ctx, span := (*tracer).Start(ctx, "dogs.context:event")
 	defer span.End()
 	c.Set("trace.context", ctx)
 

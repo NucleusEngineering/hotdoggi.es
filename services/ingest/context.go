@@ -32,7 +32,11 @@ func UserContextFromAPI(c *gin.Context) {
 	tracer := Global["client.trace.tracer"].(*trace.Tracer)
 	// Explicitly create new context, start of trace
 	ctx := context.Background()
-	ctx, span := (*tracer).Start(ctx, "ingest.context:api")
+	// Create root span
+	ctx, span := (*tracer).Start(ctx, "ingest.context", trace.WithNewRoot())
+	span.End()
+
+	ctx, span = (*tracer).Start(ctx, "ingest.context:api")
 	defer span.End()
 	c.Set("trace.context", ctx)
 
