@@ -36,7 +36,7 @@ func UserContextFromAPI(c *gin.Context) {
 	// Explicitly create new context, start of trace
 	ctx := context.Background()
 	// Create root span
-	ctx, span := (*tracer).Start(ctx, "dogs.context", trace.WithNewRoot())
+	ctx, span := (*tracer).Start(ctx, "api", trace.WithNewRoot())
 	span.End()
 
 	ctx, span = (*tracer).Start(ctx, "dogs.context:api")
