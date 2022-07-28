@@ -16,9 +16,13 @@ FROM gcr.io/endpoints-release/endpoints-runtime-serverless:2.37.0
 USER root
 # Disable tracing
 ENV ESPv2_ARGS "^++^--disable_tracing"
+# Bump HTTP timeouts to an hour to account for sockets
+ENV ESPv2_ARGS "${ESPv2_ARGS}++--http_request_timeout_s=3600"
+# Set config
 ENV ENDPOINTS_SERVICE_PATH /etc/endpoints/service.json
 COPY service.json /etc/endpoints/service.json
 RUN chown -R envoy:envoy /etc/endpoints/service.json && chmod -R 755 /etc/endpoints/service.json
+
 USER envoy
 ENTRYPOINT ["/env_start_proxy.py"]
 
