@@ -102,10 +102,10 @@ func createTraceExporter(ctx context.Context) *exporter.Exporter {
 func createTraceProvider(ctx context.Context) *sdktrace.TracerProvider {
 	exporter := Global["client.trace.exporter"].(*exporter.Exporter)
 
-	// Probabilistic trace exporter in PROD
+	// Probabilistic trace exporter in PROD, sample rate 10%
 	provider := sdktrace.NewTracerProvider(
 		sdktrace.WithBatcher(exporter),
-		sdktrace.WithSampler(sdktrace.TraceIDRatioBased(0.01)),
+		sdktrace.WithSampler(sdktrace.TraceIDRatioBased(0.1)),
 	)
 	// AlwaysOn trace exporter in DEV
 	if Global["environment"].(string) == "dev" {

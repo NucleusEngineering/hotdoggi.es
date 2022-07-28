@@ -15,6 +15,7 @@
 package main
 
 import (
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -29,7 +30,8 @@ import (
 // passed in from firebase authentication at the service proxy layer.
 func UserContextFromAPI(c *gin.Context) {
 	tracer := Global["client.trace.tracer"].(*trace.Tracer)
-	ctx := c.Request.Context()
+	// Explicitly create new context, start of trace
+	ctx := context.Background()
 	ctx, span := (*tracer).Start(ctx, "ingest.context:api")
 	defer span.End()
 	c.Set("trace.context", ctx)

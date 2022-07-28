@@ -15,6 +15,7 @@
 package main
 
 import (
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -24,7 +25,7 @@ import (
 
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	gin "github.com/gin-gonic/gin"
-	"go.opentelemetry.io/otel/propagation"
+	propagation "go.opentelemetry.io/otel/propagation"
 	trace "go.opentelemetry.io/otel/trace"
 )
 
@@ -32,7 +33,8 @@ import (
 // passed in from firebase authentication at the service proxy layer.
 func UserContextFromAPI(c *gin.Context) {
 	tracer := Global["client.trace.tracer"].(*trace.Tracer)
-	ctx := c.Request.Context()
+	// Explicitly create new context, start of trace
+	ctx := context.Background()
 	ctx, span := (*tracer).Start(ctx, "dogs.context:api")
 	defer span.End()
 	c.Set("trace.context", ctx)
@@ -83,7 +85,8 @@ func UserContextFromAPI(c *gin.Context) {
 // passed in from the event data.
 func ContextFromEvent(c *gin.Context) {
 	tracer := Global["client.trace.tracer"].(*trace.Tracer)
-	ctx := c.Request.Context()
+	// Explicitly create new context, start of trace
+	ctx := context.Background()
 	ctx, span := (*tracer).Start(ctx, "dogs.context:event#prehydration")
 	defer span.End()
 
@@ -116,7 +119,7 @@ func ContextFromEvent(c *gin.Context) {
 	c.Set("event.type", event.Context.GetType())
 	c.Set("event.source", event.Context.GetSource())
 
-	// Override trace context
+	// Explicitly override context from original event trace
 	traceparent, err := event.Context.GetExtension("traceparent")
 	if err != nil {
 		log.Printf("error: %v\n", err)

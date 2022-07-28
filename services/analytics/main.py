@@ -40,6 +40,7 @@ app = Flask(__name__)
 def index():
     event = unwrap(request)
     tracer = create_tracer()
+    # Explicitly override context from original event trace
     ctx = parent_context(event["traceparent"])
 
     with tracer.start_as_current_span("analytics.handler:event", context=ctx):
@@ -95,8 +96,8 @@ def index():
 
 
 def create_tracer():
-    # Default to PROD
-    sampler = TraceIdRatioBased(0.01)
+    # Default to PROD, sample rate 10%
+    sampler = TraceIdRatioBased(0.1)
     if os.getenv("ENVIRONMENT") == "dev":
         # Always sample in DEV
         sampler = StaticSampler(Decision(True))

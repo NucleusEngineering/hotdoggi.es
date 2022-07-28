@@ -93,12 +93,10 @@ func main() {
 	}
 	socket.Connect()
 
-	for {
-		select {
-		case <-interrupt:
-			log.Println(">>> Exiting ...")
-			socket.Close()
-			return
-		}
+	for range interrupt {
+		fmt.Println()
+		log.Println(">>> Exiting ...")
+		socket.Close()
+		return
 	}
 }

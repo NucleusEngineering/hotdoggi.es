@@ -24,6 +24,7 @@ import (
 	firestore "cloud.google.com/go/firestore"
 	gin "github.com/gin-gonic/gin"
 
+	propagation "go.opentelemetry.io/otel/propagation"
 	trace "go.opentelemetry.io/otel/trace"
 )
 
@@ -106,11 +107,10 @@ func commit(ctx context.Context, c *gin.Context) (*firestore.DocumentRef, error)
 	sourceName := c.MustGet("event.source").(string)
 	data := c.MustGet("event.data").(*DogRef)
 
-	traceparent := fmt.Sprintf("00-%s-%s-%s",
-		span.SpanContext().TraceID().String(),
-		span.SpanContext().SpanID().String(),
-		span.SpanContext().TraceFlags().String(),
-	)
+	// Use explicit propagation of the trace context
+	carrier := propagation.MapCarrier{}
+	propagation.TraceContext{}.Inject(ctx, carrier)
+	traceparent := carrier.Get("traceparent")
 
 	payload := EventData{
 		Principal: *principal,
