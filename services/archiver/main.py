@@ -34,7 +34,7 @@ SERVICE_NAME = "archiver"
 
 app = Flask(__name__)
 
-@app.route("/events/", methods=["POST"])
+@app.route("/v1/events/", methods=["POST"])
 def index():
     event = unwrap(request)
     tracer = create_tracer()

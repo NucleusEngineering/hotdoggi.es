@@ -45,7 +45,7 @@ func main() {
 	defer provider.ForceFlush(ctx)
 
 	router := gin.Default()
-	events := router.Group("/events")
+	events := router.Group("/v1/events")
 	events.Use(UserContextFromAPI)
 	{
 		events.POST("/:type/:source", EventHandler)

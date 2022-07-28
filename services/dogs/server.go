@@ -47,13 +47,13 @@ func main() {
 	defer provider.ForceFlush(ctx)
 
 	router := gin.Default()
-	events := router.Group("/events")
+	events := router.Group("/v1/events")
 	events.Use(ContextFromEvent)
 	{
 		events.POST("/", EventHandler)
 	}
 
-	api := router.Group("/dogs")
+	api := router.Group("/v1/dogs")
 	api.Use(UserContextFromAPI)
 	{
 		api.GET("/:key", GetHandler)

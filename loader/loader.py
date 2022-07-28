@@ -61,19 +61,19 @@ def addRandomDog():
     event_type="es.hotdoggi.events.dog_added"
     print(f"{colors.BLUE}ASYNC[{event_type}]\t{colors.WHITE} creating {colors.RED}{data['dog']['name']}{colors.WHITE} ({data['dog']['color']} {data['dog']['breed']})")
     
-    r = requests.post(f"{endpoint}/events/{event_type}/{source}", data=json.dumps(data), headers=headers)
+    r = requests.post(f"{endpoint}/v1/events/{event_type}/{source}", data=json.dumps(data), headers=headers)
     if r.status_code != 201:
         print("error publishing event")
 
 def getAllDogs():
-    r = requests.get(f"{endpoint}/dogs/", headers=headers)
+    r = requests.get(f"{endpoint}/v1/dogs/", headers=headers)
     print(f"{colors.GREEN} SYNC[dogs/*]\t\t\t\t{colors.WHITE} listing all dogs")
     if r.status_code > 299:
         print("error getting dogs")
     return json.loads(r.text)
 
 def getDog(dog):
-    r = requests.get(f"{endpoint}/dogs/{dog['id']}", headers=headers)
+    r = requests.get(f"{endpoint}/v1/dogs/{dog['id']}", headers=headers)
     print(f"{colors.GREEN} SYNC[dogs/{dog['id']}]\t{colors.WHITE} update {colors.RED}{dog['dog']['name']}{colors.WHITE}")
     if r.status_code > 299:
         print("error getting dog")
@@ -94,7 +94,7 @@ def simulateDogMovement(dog):
         event_type = "es.hotdoggi.events.dog_moved"
         print(f"{colors.BLUE}ASYNC[{event_type}]\t{colors.WHITE} moving {colors.RED}{dog['dog']['name']}{colors.WHITE} to {colors.YELLOW}({data['dog']['location']['latitude']},{data['dog']['location']['latitude']}){colors.WHITE}")
 
-        r = requests.post(f"{endpoint}/events/{event_type}/{source}", data=json.dumps(data), headers=headers)
+        r = requests.post(f"{endpoint}/v1/events/{event_type}/{source}", data=json.dumps(data), headers=headers)
         if r.status_code != 201:
             print("error publishing event")
 
@@ -108,7 +108,7 @@ def removeDog(dog):
     event_type = "es.hotdoggi.events.dog_removed"
     print(f"{colors.BLUE}ASYNC[{event_type}]\t{colors.WHITE} removing {colors.RED}{dog['dog']['name']}{colors.WHITE} (id {dog['id']})")
 
-    r = requests.post(f"{endpoint}/events/{event_type}/{source}", data=json.dumps(data), headers=headers)
+    r = requests.post(f"{endpoint}/v1/events/{event_type}/{source}", data=json.dumps(data), headers=headers)
     if r.status_code != 201:
         print("error publishing event")
 

@@ -12,7 +12,7 @@ import (
 	"github.com/sacOO7/gowebsocket"
 )
 
-const endpoint = "wss://api.hotdoggies.stamer.demo.altostrat.com/dogs/"
+const endpoint = "wss://api.hotdoggies.stamer.demo.altostrat.com/v1/dogs/"
 
 type DogRef struct {
 	ID  string `header:"id" firestore:"id" json:"id"`

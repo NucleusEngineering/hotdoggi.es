@@ -36,7 +36,7 @@ SERVICE_NAME = "analytics"
 
 app = Flask(__name__)
 
-@app.route("/events/", methods=["POST"])
+@app.route("/v1/events/", methods=["POST"])
 def index():
     event = unwrap(request)
     tracer = create_tracer()
@@ -59,7 +59,7 @@ def index():
         except NotFound:
             # Job insertion with schema auto detection
             with tracer.start_as_current_span("analytics.data:load", context=ctx):
-                print(f"HOTDOGGIES loading job: {identifier}:{table_name}")
+                print(f"loading job: {identifier}:{table_name}")
 
                 dataset_ref = client.dataset(dataset_name)
                 table_ref = dataset_ref.table(table_name)

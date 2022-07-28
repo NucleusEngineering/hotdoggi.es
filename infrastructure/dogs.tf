@@ -102,7 +102,7 @@ resource "google_pubsub_subscription" "dogs" {
   topic   = google_pubsub_topic.topic.name
   filter  = "hasPrefix(attributes.type, \"es.hotdoggi.events.dog_\")"
   push_config {
-    push_endpoint = "${google_cloud_run_service.dogs.status[0].url}/events/"
+    push_endpoint = "${google_cloud_run_service.dogs.status[0].url}/v1/events/"
     oidc_token {
       service_account_email = google_service_account.pubsub-pusher.email
     }

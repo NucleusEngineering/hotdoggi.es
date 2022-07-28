@@ -33,7 +33,7 @@ securityDefinitions:
 security:
   - firebase: []
 paths:
-  /events/{type}/{source}:
+  /v1/events/{type}/{source}:
     post:
       summary: Post an event
       security:
@@ -59,7 +59,7 @@ paths:
           description: A successful response
           schema:
             type: string
-  /dogs:
+  /v1/dogs:
     get:
       summary: List all dogs
       security:
@@ -73,7 +73,7 @@ paths:
           description: A successful response
           schema:
             type: string
-  /dogs/{key}:
+  /v1/dogs/{key}:
     get:
       summary: Get a specific dog referenced by its key.
       security:
