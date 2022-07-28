@@ -96,7 +96,7 @@ def index():
 
 def create_tracer():
     # Default to PROD
-    sampler = TraceIdRatioBased(0.1)
+    sampler = TraceIdRatioBased(0.01)
     if os.getenv("ENVIRONMENT") == "dev":
         # Always sample in DEV
         sampler = StaticSampler(Decision(True))
