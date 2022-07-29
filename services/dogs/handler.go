@@ -203,7 +203,7 @@ func EventHandler(c *gin.Context) {
 
 func dogAdded(ctx context.Context, c *gin.Context, caller *Principal, dog Dog) error {
 	tracer := Global["client.trace.tracer"].(*trace.Tracer)
-	ctx, span := (*tracer).Start(ctx, "dogs.handler:event:added")
+	ctx, span := (*tracer).Start(ctx, "dogs.handler:event.added")
 	defer span.End()
 
 	dog.Metadata.Owner = caller.ID
@@ -214,7 +214,7 @@ func dogAdded(ctx context.Context, c *gin.Context, caller *Principal, dog Dog) e
 
 func dogRemoved(ctx context.Context, c *gin.Context, caller *Principal, ref *DogRef) error {
 	tracer := Global["client.trace.tracer"].(*trace.Tracer)
-	ctx, span := (*tracer).Start(ctx, "dogs.handler:event:removed")
+	ctx, span := (*tracer).Start(ctx, "dogs.handler:event.removed")
 	defer span.End()
 	_, err := Get(ctx, caller.ID, ref.ID)
 	if err != nil {
@@ -227,7 +227,7 @@ func dogRemoved(ctx context.Context, c *gin.Context, caller *Principal, ref *Dog
 
 func dogUpdated(ctx context.Context, c *gin.Context, caller *Principal, ref *DogRef) error {
 	tracer := Global["client.trace.tracer"].(*trace.Tracer)
-	ctx, span := (*tracer).Start(ctx, "dogs.handler:event:updated")
+	ctx, span := (*tracer).Start(ctx, "dogs.handler:event.updated")
 	defer span.End()
 	_, err := Get(ctx, caller.ID, ref.ID)
 	if err != nil {
@@ -239,7 +239,7 @@ func dogUpdated(ctx context.Context, c *gin.Context, caller *Principal, ref *Dog
 
 func dogMoved(ctx context.Context, c *gin.Context, caller *Principal, ref *DogRef, lat float32, long float32) error {
 	tracer := Global["client.trace.tracer"].(*trace.Tracer)
-	ctx, span := (*tracer).Start(ctx, "dogs.handler:event:moved")
+	ctx, span := (*tracer).Start(ctx, "dogs.handler:event.moved")
 	defer span.End()
 	existing, err := Get(ctx, caller.ID, ref.ID)
 	if err != nil {

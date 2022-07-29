@@ -34,12 +34,31 @@ from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapProp
 PREFIX_IDENTIFIER = "es.hotdoggi"
 SERVICE_NAME = "analytics"
 
+def create_tracer():
+    # Default to PROD, sample rate 10%
+    sampler = TraceIdRatioBased(0.1)
+    if os.getenv("ENVIRONMENT") == "dev":
+        # Always sample in DEV
+        sampler = StaticSampler(Decision(True))
+
+    tracer_provider = TracerProvider(sampler=sampler)
+    cloud_trace_exporter = CloudTraceSpanExporter()
+    tracer_provider.add_span_processor(
+        BatchSpanProcessor(cloud_trace_exporter)
+    )
+    trace.set_tracer_provider(tracer_provider)
+    tracer = trace.get_tracer(f"${PREFIX_IDENTIFIER}.service.${SERVICE_NAME}/")
+
+    return tracer
+
+
 app = Flask(__name__)
+tracer = create_tracer()
 
 @app.route("/v1/events/", methods=["POST"])
 def index():
     event = unwrap(request)
-    tracer = create_tracer()
+    
     # Explicitly override context from original event trace
     ctx = parent_context(event["traceparent"])
 
@@ -93,24 +112,6 @@ def index():
                 print("insert errors: {}".format(errors))
 
     return ("", 204)
-
-
-def create_tracer():
-    # Default to PROD, sample rate 10%
-    sampler = TraceIdRatioBased(0.1)
-    if os.getenv("ENVIRONMENT") == "dev":
-        # Always sample in DEV
-        sampler = StaticSampler(Decision(True))
-
-    tracer_provider = TracerProvider(sampler=sampler)
-    cloud_trace_exporter = CloudTraceSpanExporter()
-    tracer_provider.add_span_processor(
-        BatchSpanProcessor(cloud_trace_exporter)
-    )
-    trace.set_tracer_provider(tracer_provider)
-    tracer = trace.get_tracer(f"${PREFIX_IDENTIFIER}.service.${SERVICE_NAME}/")
-
-    return tracer
 
 
 def parent_context(traceparent):
