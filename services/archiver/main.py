@@ -23,6 +23,7 @@ from cloudevents.http import CloudEvent, from_json, to_json
 from google.cloud import storage
 
 from opentelemetry import trace
+from opentelemetry.trace import NonRecordingSpan
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.sampling import StaticSampler, TraceIdRatioBased, Decision
 from opentelemetry.exporter.cloud_trace import CloudTraceSpanExporter
@@ -59,6 +60,7 @@ def index():
     
     # Explicitly override context from original event trace
     ctx = parent_context(event["traceparent"])
+    trace.set_span_in_context(NonRecordingSpan(ctx))
 
     with tracer.start_as_current_span("archiver.handler:event", context=ctx):
         identifier = event["id"]

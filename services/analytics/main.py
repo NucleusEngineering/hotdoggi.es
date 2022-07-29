@@ -61,6 +61,7 @@ def index():
     
     # Explicitly override context from original event trace
     ctx = parent_context(event["traceparent"])
+    trace.set_span_in_context(NonRecordingSpan(ctx))
 
     with tracer.start_as_current_span("analytics.handler:event", context=ctx):
         identifier = event["id"]
