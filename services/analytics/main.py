@@ -36,12 +36,7 @@ SERVICE_NAME = "analytics"
 
 def create_tracer():
     # Default to PROD, sample rate 10%
-    sampler = TraceIdRatioBased(0.1)
-    if os.getenv("ENVIRONMENT") == "dev":
-        # Always sample in DEV
-        sampler = StaticSampler(Decision(True))
-
-    tracer_provider = TracerProvider(sampler=sampler)
+    tracer_provider = TracerProvider()
     cloud_trace_exporter = CloudTraceSpanExporter()
     tracer_provider.add_span_processor(
         BatchSpanProcessor(cloud_trace_exporter)
@@ -61,7 +56,6 @@ def index():
     
     # Explicitly override context from original event trace
     ctx = parent_context(event["traceparent"])
-    trace.set_span_in_context(NonRecordingSpan(ctx))
 
     with tracer.start_as_current_span("analytics.handler:event", context=ctx):
         identifier = event["id"]
