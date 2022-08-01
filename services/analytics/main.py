@@ -69,11 +69,11 @@ def index():
         table_name = type_name.replace(".", "_")
 
         try:
-            with tracer.start_as_current_span("analytics.data:check", context=ctx):
+            with tracer.start_as_current_span("analytics.data:check"):
                 client.get_table(f"{project_id}.{dataset_name}.{table_name}")
         except NotFound:
             # Job insertion with schema auto detection
-            with tracer.start_as_current_span("analytics.data:load", context=ctx):
+            with tracer.start_as_current_span("analytics.data:load"):
                 print(f"loading job: {identifier}:{table_name}")
 
                 dataset_ref = client.dataset(dataset_name)
@@ -96,7 +96,7 @@ def index():
                 return ("", 204)
 
         # Stream insertion
-        with tracer.start_as_current_span("analytics.data:insert", context=ctx):
+        with tracer.start_as_current_span("analytics.data:insert"):
             print(f"streaming insert: {identifier}:{table_name}")
             rows = [
                 json.load(io.BytesIO(to_json(event)))

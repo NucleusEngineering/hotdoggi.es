@@ -59,7 +59,7 @@ def index():
         type_name = event["type"]
         print(f"processing event: {identifier}")
 
-        with tracer.start_as_current_span("analytics.data:write", context=ctx):
+        with tracer.start_as_current_span("archiver.data:write"):
             client = storage.Client()
             bucket = client.bucket(os.environ["ARCHIVAL_BUCKET"])
             blob = bucket.blob(f"{type_name}/{identifier}")
