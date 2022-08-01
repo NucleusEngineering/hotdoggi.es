@@ -25,9 +25,11 @@ Command Query Responsibility Segregation (CQRS) introduces the idea of distingui
 
 CQRS brings a number of architectural advantages. Operators can independently scale commands and queries. It's much easier to scale and optimize a read-heavy application if the query portion remains on a separate partition in the system. This can roughly be compared to using read-replicas to reduce read- contention in relational database systems. Additionally, caching of dynamic content becomes a bit easier.
 
+![Command Query Responsibility Segregation](diagrams/cqrs.png)
+
 The segregation is enforced at the API layer. Resources known to the API continue to expose read-only methods, such as getting individual resources or listing multiple of a kind, just like they would in conventional RESTful design. The difference is that all state-mutating commands are all POSTed through a single `/events` endpoint, which is served by a generic ingestion service. This service accepts, inspects, validates and pushed event payloads downstream into the rest of the event-driven architecture, where the command will be processed at a later stage.
 
-![Command Query Responsibility Segregation](diagrams/cqrs.png)
+![Flow of data through the system](diagrams/system_flow.png)
 
 ### Websockets
 
@@ -123,3 +125,9 @@ The Cloud Run service running the proxy allows unauthenticated invokations, mean
 ![End-User Authentication with Identity Platform and Encapsulated Tokens in Service-to-Service Communications](diagrams/authentication.png)
 
 Additionally, services in hotdoggi.es will occasionally require communication with Google Cloud services and APIs. For example, the `dogs` service needs to query items in Firestore and each interaction with the APIs need to be authenticated in a similar fashion. Each service is using a non-standard service account which is given exact permissions to be able to it's job.
+
+### Distributed Tracing
+
+lorem ipsum distributed 
+
+![Trace list graph as visualized by Cloud Trace](diagrams/tracing.png)
