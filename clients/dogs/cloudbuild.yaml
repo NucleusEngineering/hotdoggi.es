@@ -20,14 +20,14 @@ steps:
     - 'pipefail'
     - '-c'
     - |-
-      mkdir -p /workspace/builds/$(git rev-parse HEAD)
-      ( cd clients/dogs && go mod download)
-      ( cd clients/dogs && GOOS=linux GOARCH=amd64 go build && mv dogs /workspace/builds/(git rev-parse HEAD)/dogs_linux_amd64 )
+      mkdir -p /workspace/builds/$(git rev-parse HEAD)/
+      ( cd clients/dogs && go mod download )
+      ( cd clients/dogs && GOOS=linux GOARCH=amd64 go build && mv dogs /workspace/builds/$(git rev-parse HEAD)/dogs_linux_amd64 )
       ( cd clients/dogs && GOOS=darwin GOARCH=amd64 go build && mv dogs /workspace/builds/$(git rev-parse HEAD)/dogs_darwin_amd64 )
-      ( cd clients/dogs && GOOS=windows GOARCH=amd64 go build && mv dogs.exe /workspace/builds/$(git rev-parse HEAD)/dogs_windows_amd64.exe)
+      ( cd clients/dogs && GOOS=windows GOARCH=amd64 go build && mv dogs.exe /workspace/builds/$(git rev-parse HEAD)/dogs_windows_amd64.exe )
       ( cd clients/dogs && GOOS=linux GOARCH=arm64 go build && mv dogs /workspace/builds/$(git rev-parse HEAD)/dogs_linux_arm64 )
       ( cd clients/dogs && GOOS=darwin GOARCH=arm64 go build && mv dogs /workspace/builds/$(git rev-parse HEAD)/dogs_darwin_arm64 )
-      ( cd clients/dogs && GOOS=windows GOARCH=arm64 go build && mv dogs.exe /workspace/builds/$(git rev-parse HEAD)/dogs_windows_arm64.exe)
+      ( cd clients/dogs && GOOS=windows GOARCH=arm64 go build && mv dogs.exe /workspace/builds/$(git rev-parse HEAD)/dogs_windows_arm64.exe )
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: 'bash'
     args:
