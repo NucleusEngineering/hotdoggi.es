@@ -18,6 +18,9 @@ USER root
 ENV ESPv2_ARGS "^++^--disable_tracing"
 # Bump HTTP timeouts to an hour to account for sockets
 ENV ESPv2_ARGS "${ESPv2_ARGS}++--http_request_timeout_s=3600"
+# Allow CORS preflight OPTIONS
+ENV ESPv2_ARGS "${ESPv2_ARGS}++--cors_preset=basic"
+ENV ESPv2_ARGS "${ESPv2_ARGS}++--cors_allow_credentials"
 # Set config
 ENV ENDPOINTS_SERVICE_PATH /etc/endpoints/service.json
 COPY service.json /etc/endpoints/service.json

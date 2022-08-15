@@ -18,6 +18,9 @@ info:
   description: hotdoggies API
   version: 1.0.0
 host: api.hotdoggies.stamer.demo.altostrat.com
+x-google-endpoints:
+- name: api.hotdoggies.stamer.demo.altostrat.com
+  allowCors: True
 schemes:
   - https
 produces:
@@ -30,8 +33,6 @@ securityDefinitions:
     x-google-issuer: "https://securetoken.google.com/hotdoggi-es"
     x-google-jwks_uri: "https://www.googleapis.com/service_accounts/v1/metadata/x509/securetoken@system.gserviceaccount.com"
     x-google-audiences: "hotdoggi-es"
-security:
-  - firebase: []
 paths:
   /v1/events/{type}/{source}:
     post:
@@ -59,6 +60,29 @@ paths:
           description: A successful response
           schema:
             type: string
+    options:
+      summary: CORS preflights
+      parameters:
+        - in: path
+          name: type
+          type: string
+          required: true
+          description: Type of event to post
+        - in: path
+          name: source
+          type: string
+          required: true
+          description: Name of the event source type
+      operationId: options-post-events
+      x-google-backend:
+        address: https://hotdoggies-ingest-34td3b3ada-ew.a.run.app
+        protocol: h2
+        path_translation: APPEND_PATH_TO_ADDRESS
+      responses:
+        '204':
+          description: A successful response
+          schema:
+            type: string
   /v1/dogs:
     get:
       summary: List all dogs
@@ -70,6 +94,18 @@ paths:
         path_translation: APPEND_PATH_TO_ADDRESS
       responses:
         '200':
+          description: A successful response
+          schema:
+            type: string
+    options:
+      summary: CORS preflights
+      operationId: options-list-dogs
+      x-google-backend:
+        address: https://hotdoggies-dogs-34td3b3ada-ew.a.run.app
+        protocol: h2
+        path_translation: APPEND_PATH_TO_ADDRESS
+      responses:
+        '204':
           description: A successful response
           schema:
             type: string
@@ -90,6 +126,24 @@ paths:
         path_translation: APPEND_PATH_TO_ADDRESS
       responses:
         '200':
+          description: A successful response
+          schema:
+            type: string
+    options:
+      summary: CORS preflights
+      parameters:
+        - in: path
+          name: key
+          type: string
+          required: true
+          description: Key of the dog to get
+      operationId: options-get-dogs
+      x-google-backend:
+        address: https://hotdoggies-dogs-34td3b3ada-ew.a.run.app
+        protocol: h2
+        path_translation: APPEND_PATH_TO_ADDRESS
+      responses:
+        '204':
           description: A successful response
           schema:
             type: string

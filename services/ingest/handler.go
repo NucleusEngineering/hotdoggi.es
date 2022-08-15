@@ -28,6 +28,9 @@ import (
 	trace "go.opentelemetry.io/otel/trace"
 )
 
+// OptionsHandler for CORS preflights OPTIONS requests
+func OptionsHandler(c *gin.Context) {}
+
 // EventHandler implements POSTing events
 func EventHandler(c *gin.Context) {
 	ctx := c.MustGet("trace.context").(context.Context)

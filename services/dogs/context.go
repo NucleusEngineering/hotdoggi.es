@@ -32,6 +32,17 @@ import (
 // UserContextFromAPI implements a middleware that resolves embedded user context info
 // passed in from firebase authentication at the service proxy layer.
 func UserContextFromAPI(c *gin.Context) {
+	// Support CORS preflight OPTIONS requests
+	c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+	c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
+	c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, Accept, Origin, Cache-Control, X-Requested-With")
+	c.Writer.Header().Set("Access-Control-Allow-Methods", "OPTIONS, POST, GET")
+
+	if c.Request.Method == "OPTIONS" {
+		c.AbortWithStatus(204)
+		return
+	}
+
 	tracer := Global["client.trace.tracer"].(*trace.Tracer)
 	// Explicitly create new context, start of trace
 	ctx := context.Background()

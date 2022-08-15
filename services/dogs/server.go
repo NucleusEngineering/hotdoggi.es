@@ -49,17 +49,15 @@ func main() {
 	router := gin.Default()
 	events := router.Group("/v1/events")
 	events.Use(ContextFromEvent)
-	{
-		events.POST("/", EventHandler)
-	}
+	events.POST("/", EventHandler)
 
 	api := router.Group("/v1/dogs")
 	api.Use(UserContextFromAPI)
-	{
-		api.GET("/:key", GetHandler)
-		api.GET("/", ListHandler)
+	api.GET("/:key", GetHandler)
+	api.GET("/", ListHandler)
+	api.OPTIONS("/:key", OptionsHandler) // CORS preflights
+	api.OPTIONS("/", OptionsHandler)     // CORS preflights
 
-	}
 	log.Println("Starting server.")
 	log.Fatalf("error: %v", router.Run())
 }

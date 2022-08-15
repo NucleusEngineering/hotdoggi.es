@@ -27,6 +27,9 @@ import (
 
 var upgrader = websocket.Upgrader{}
 
+// OptionsHandler for CORS preflights OPTIONS requests
+func OptionsHandler(c *gin.Context) {}
+
 // ListHandler implements GET /
 func ListHandler(c *gin.Context) {
 	ctx := c.MustGet("trace.context").(context.Context)
