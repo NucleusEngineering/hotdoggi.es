@@ -1,15 +1,15 @@
 # Hotdoggi.es
 
-Hotdoggi.es is a demo application to showcase modern and comtemporary application architectures on Google Cloud serverless technologies. It is built to support common use cases such as API-driven microservices architectures, JAM stacks, contemporary end-user and service-to-service authentication, event-driven patterns and Command Query Responsibility Segregation designs.
+Hotdoggi.es is a demo application to showcase modern and contemporary application architectures on Google Cloud serverless technologies. It is built to support common use cases such as API-driven microservices architectures, JAM stacks, contemporary end-user and service-to-service authentication, event-driven patterns and Command Query Responsibility Segregation designs.
 
 The application implements a fictional business that provides digital convenience services to dog-owning customers. Users can register their pups and book trips to dog spas through the application. Drivers will collect the dog from a place of residence and chauffeur them to a spa or a dog hotel, where they can enjoy a beautiful day away from home socializing with others. During the trip, a multitude of event sources will emit updates about the dog so that the owning user can observe everything that happens from the comfort of their screens at home or on the go.
 
 ## Architectural Patterns
-Multiple contempory patterns have been implemented in the applications design and can be observed by inspecting the code or deploying the application to a Google Cloud project.
+Multiple contemporary patterns have been implemented in the applications design and can be observed by inspecting the code or deploying the application to a Google Cloud project.
 
 ### JAM Stack: Static Serving
 
-The frontend of the application is using the JAM Stack (JavaScript, APIs and Markup) pattern. A React application in `app/`, is integrated by Cloud Build and its production-optimized build is rsynced to a Google Cloud Storage bucket which serves as an origin backend for Google Cloud External HTTPS Load Balancing. Additionally, the serving of these static assets is accelerated through Google Cloud CDN.
+The frontend of the application is using the JAM Stack (JavaScript, APIs and Markup) pattern. A React application in `app/`, is integrated by Cloud Build and its production-optimized build is rsync-ed to a Google Cloud Storage bucket which serves as an origin backend for Google Cloud External HTTPS Load Balancing. Additionally, the serving of these static assets is accelerated through Google Cloud CDN.
 
 ![Build pipeline and CDN-accelerated serving of static frontend assets](diagrams/static_serving.png)
 
@@ -21,7 +21,9 @@ The A in JAM Stack stands for APIs and implements the frontend access to dynamic
 
 ### CQRS
 
-Command Query Responsibility Segregation (CQRS) introduces the idea of distinguishing between synchronous read-only 'query' operations and asynchronous operations that eventually mutate (persistent) state. In other words: the 'Q' stands for all interactions in which data is read 'real-time'/now and the 'C' groups actions which create, update or delete data, but not necessarily right away. The command portion is therefore often implemented as an event-driven system, which accepts a command, quickly pushes it as an event through the rest of the architecture and responds quickly to the requestor even though the command has not yet been processed, hence, inroducing the asynchronicity. The synchronous query portion remains as a conventional synchronous API.
+Command Query Responsibility Segregation (CQRS) introduces the idea of distinguishing between synchronous read-only 'query' operations and asynchronous operations that eventually mutate (persistent) state. In other words: the 'Q' stands for all interactions in which data is read 'real-time'/now and the 'C' groups actions which create, update or delete data, but not necessarily right away. The command portion is therefore often implemented as an event-driven system, which accepts a command, quickly pushes it as an event through the rest of the architecture and responds quickly to the requestor even though the command has not yet been processed, hence, introducing the asynchronicity. The synchronous query portion remains as a conventional synchronous API.
+
+*NOTE:* In the context of this demo, commands & events are treated synonymously and refer to their asynchronous processing nature and resulting technically different implementation. In the context of another application, it might seem reasonable to distinguish them (at least semantically).
 
 CQRS brings a number of architectural advantages. Operators can independently scale commands and queries. It's much easier to scale and optimize a read-heavy application if the query portion remains on a separate partition in the system. This can roughly be compared to using read-replicas to reduce read- contention in relational database systems. Additionally, caching of dynamic content becomes a bit easier.
 
@@ -33,7 +35,7 @@ The segregation is enforced at the API layer. Resources known to the API continu
 
 ### Websockets
 
-Read-only queries can be seamlessly upgraded to streaming Websocket connections. The endpoints do not change and the methods are the same as for regular, short-lived HTTP requests. The client can simply initiate a Websocket connection upgrade by including the necessart HTTP headers. The API will then respond with an HTTP 101 status and signal that it's ready to upgrade to HTTP/2 for websocket streaming connections in which the server will continuously stream the same JSON-serialized objects for updated objects back to the client.
+Read-only queries can be seamlessly upgraded to streaming Websocket connections. The endpoints do not change and the methods are the same as for regular, short-lived HTTP requests. The client can simply initiate a Websocket connection upgrade by including the necessary HTTP headers. The API will then respond with an HTTP 101 status and signal that it's ready to upgrade to HTTP/2 for websocket streaming connections in which the server will continuously stream the same JSON-serialized objects for updated objects back to the client.
 
 ![Websocket Upgrading](diagrams/websockets.png)
 
@@ -108,7 +110,7 @@ Hotdoggi.es pushes all incoming events to a single `$all` Pub/Sub topic. Among o
 
 The choreography patterns of free-floating self-organization is extremely helpful here because it enables teams to seamlessly extend the functionality of the entire architecture by simply creating additional services and subscribing to the common event stream. Unlike an orchestration pattern, it is not required to make changes to a central router. This can be seen in [the subscription of the dogs service](https://github.com/helloworlddan/hotdoggi.es/blob/main/infrastructure/dogs.tf#L86).
 
-The combination of push-subscriptions delivered into highly elastic, autoscaled consuming services (like Cloud Run) is very effective as users don't need to worry about scaling message queues. Such an architecture is cost-effective at processing low rates of events and at the same time is capable for processing tens of thousands of events in seconds without any external operational adjustments.
+The combination of push-subscriptions delivered into highly elastic, auto-scaled consuming services (like Cloud Run) is very effective as users don't need to worry about scaling message queues. Such an architecture is cost-effective at processing low rates of events and at the same time is capable for processing tens of thousands of events in seconds without any external operational adjustments.
 
 ![Powerful event orchestration through a $all event stream on Pub/Sub with filtered push-subscriptions](diagrams/choreography.png)
 
@@ -116,11 +118,11 @@ The combination of push-subscriptions delivered into highly elastic, autoscaled 
 
 The application follows a strong, identity-based authentication flow in which nothing is trusted and each end-user or service-to-service invokation is validated and verified.
 
-Each invokation originating from outside of Google Cloud needs to be authenticated with `Authorization: bearer $TOKEN` headers. These tokens need to be obtained by authenticating with username/password or with one of the configured social login providers which currently are Google and Github. Hotdoggi.es uses [Identity Platform](https://cloud.google.com/identity-platform) and there are many more social login providers available. The [hotdoggi.es frontend](https://hotdoggies.stamer.demo.altostrat.com/) implements the authentication flow using the Firebase Authentication libraries.
+Each invocation originating from outside of Google Cloud needs to be authenticated with `Authorization: bearer $TOKEN` headers. These tokens need to be obtained by authenticating with username/password or with one of the configured social login providers which currently are Google and Github. Hotdoggi.es uses [Identity Platform](https://cloud.google.com/identity-platform) and there are many more social login providers available. The [hotdoggi.es frontend](https://hotdoggies.stamer.demo.altostrat.com/) implements the authentication flow using the Firebase Authentication libraries.
 
 All inbound requests are routed through the ESPv2 endpoint proxy which will inspect and verify issued tokens with Identity Platform before passing them onto the downstream services. Once authenticated, the original authorization headers are moved to `X-Forwarded-Authorization` and the proxy uses it's service account to obtain it's own token to be put into `Authorization: bearer $TOKEN` headers. This effectively encapsulates and forwards the original end-user authentication between client and proxy and uses service-to-service authentication between the proxy and downstream services like `dogs`.
 
-The Cloud Run service running the proxy allows unauthenticated invokations, meaning that Cloud Run is not checking supplied credentials, but the running ESPv2 container will. The downstream services like `dogs` require authentication and Cloud Run will check authorization headers before passing inbound requests to the actual service code. This ensures strong service-to-service authentication and checks for authorization, too: Only the proxy's service account identity is allowed to directly invoke the downstream services. It can't be called directly from anywhere else/with any other identity, hence end-user authentication via the proxy is absolutely required.
+The Cloud Run service running the proxy allows unauthenticated invocations, meaning that Cloud Run is not checking supplied credentials, but the running ESPv2 container will. The downstream services like `dogs` require authentication and Cloud Run will check authorization headers before passing inbound requests to the actual service code. This ensures strong service-to-service authentication and checks for authorization, too: Only the proxy's service account identity is allowed to directly invoke the downstream services. It can't be called directly from anywhere else/with any other identity, hence end-user authentication via the proxy is absolutely required.
 
 ![End-User Authentication with Identity Platform and Encapsulated Tokens in Service-to-Service Communications](diagrams/authentication.png)
 
@@ -128,6 +130,10 @@ Additionally, services in hotdoggi.es will occasionally require communication wi
 
 ### Distributed Tracing
 
-lorem ipsum distributed 
+The code execution within services of this demo is instrumented using OpenTelemetry. Each service records it's various code spans and prefixes them with a service identifier, before batch-exporting the recorded traces to Google Cloud Trace, where trace data is reconstructed and visualized for analysis.
 
 ![Trace list graph as visualized by Cloud Trace](diagrams/tracing.png)
+
+The context of traces is propagated across services boundaries, so that a single externally-invoked interaction results in a single trace object holding spans from all services that participated in processing that interaction.
+
+In the context of events, this demo is following the Cloudevents.io [specification extension for enabling distributed tracing](https://github.com/cloudevents/spec/blob/main/cloudevents/extensions/distributed-tracing.md). 
