@@ -21,6 +21,7 @@ steps:
   - '-c'
   - |-
     cp -r lib '/workspace/services/$_SERVICE/'
+    ls -alh
 - name: 'gcr.io/cloud-builders/docker'
   args: ['build','-t', 'gcr.io/$PROJECT_ID/$_SERVICE', 'services/$_SERVICE/']
 - name: 'gcr.io/cloud-builders/docker'
