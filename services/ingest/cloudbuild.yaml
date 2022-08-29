@@ -20,8 +20,7 @@ steps:
   - 'pipefail'
   - '-c'
   - |-
-    cp -r lib '/workspace/services/$_SERVICE/'
-    ls -alh
+    cp -r lib 'services/$_SERVICE/'
 - name: 'gcr.io/cloud-builders/docker'
   args: ['build','-t', 'gcr.io/$PROJECT_ID/$_SERVICE', 'services/$_SERVICE/']
 - name: 'gcr.io/cloud-builders/docker'
