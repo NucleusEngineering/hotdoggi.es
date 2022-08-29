@@ -23,6 +23,7 @@ import (
 
 	firestore "cloud.google.com/go/firestore"
 	gin "github.com/gin-gonic/gin"
+	dogs "github.com/helloworlddan/hotdoggi.es/lib/dogs"
 
 	propagation "go.opentelemetry.io/otel/propagation"
 	trace "go.opentelemetry.io/otel/trace"
@@ -81,12 +82,12 @@ func validate(ctx context.Context, c *gin.Context) error {
 	}
 
 	// Assume we are talking about dogs
-	var data DogRef
-	err = (&data).deserialize(buffer)
+	var data dogs.DogRef
+	err = (&data).Deserialize(buffer)
 	if err != nil {
 		return fmt.Errorf("failed deserialize payload: %v", err)
 	}
-	err = (&data).validate(typeName)
+	err = (&data).Validate(typeName)
 	if err != nil {
 		return fmt.Errorf("failed validate payload: %v", err)
 	}
@@ -105,17 +106,17 @@ func commit(ctx context.Context, c *gin.Context) (*firestore.DocumentRef, error)
 	defer span.End()
 
 	client := Global["client.firestore"].(*firestore.Client)
-	principal := c.MustGet("principal").(*Principal)
+	principal := c.MustGet("principal").(*dogs.Principal)
 	typeName := c.MustGet("event.type").(string)
 	sourceName := c.MustGet("event.source").(string)
-	data := c.MustGet("event.data").(*DogRef)
+	data := c.MustGet("event.data").(*dogs.DogRef)
 
 	// Use explicit propagation of the trace context
 	carrier := propagation.MapCarrier{}
 	propagation.TraceContext{}.Inject(ctx, carrier)
 	traceparent := carrier.Get("traceparent")
 
-	payload := EventData{
+	payload := dogs.EventData{
 		Principal: *principal,
 		Ref:       *data,
 	}

@@ -27,6 +27,8 @@ import (
 	gin "github.com/gin-gonic/gin"
 	propagation "go.opentelemetry.io/otel/propagation"
 	trace "go.opentelemetry.io/otel/trace"
+
+	dogs "github.com/helloworlddan/hotdoggi.es/lib/dogs"
 )
 
 // UserContextFromAPI implements a middleware that resolves embedded user context info
@@ -56,7 +58,7 @@ func UserContextFromAPI(c *gin.Context) {
 
 	// Skip verification in non-prod
 	if Global["environment"].(string) == "dev" {
-		caller := Principal{
+		caller := dogs.Principal{
 			ID:         "1",
 			Email:      "dev@localhost",
 			Name:       "development",
@@ -82,7 +84,7 @@ func UserContextFromAPI(c *gin.Context) {
 		return
 	}
 
-	var caller Principal
+	var caller dogs.Principal
 	err = json.Unmarshal(bytes, &caller)
 	if err != nil {
 		log.Printf("error: %v\n", err)
@@ -107,7 +109,7 @@ func ContextFromEvent(c *gin.Context) {
 		return
 	}
 
-	var psMessage PubSubMessage
+	var psMessage dogs.PubSubMessage
 	err = json.Unmarshal(buffer, &psMessage)
 	if err != nil {
 		log.Printf("error: %v\n", err)
@@ -145,7 +147,7 @@ func ContextFromEvent(c *gin.Context) {
 	defer span.End()
 	c.Set("trace.context", ctx)
 
-	var data EventData
+	var data dogs.EventData
 	err = json.Unmarshal(event.Data(), &data)
 	if err != nil {
 		log.Printf("error: %v\n", err)

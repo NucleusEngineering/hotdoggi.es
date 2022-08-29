@@ -14,7 +14,11 @@
 
 package dogs
 
-import "time"
+import (
+	"encoding/json"
+	"fmt"
+	"time"
+)
 
 // PubSubMessage is the data envelope used by pub/sub push subscriptions
 type PubSubMessage struct {
@@ -66,4 +70,39 @@ type Location struct {
 type Metadata struct {
 	Owner    string    `header:"owner" firestore:"owner" json:"owner"`
 	Modified time.Time `firestore:"modified" json:"modified"`
+}
+
+// Deserialize a ref into byte array
+func (ref *DogRef) Deserialize(buffer []byte) error {
+	err := json.Unmarshal(buffer, ref)
+	if err != nil {
+		return fmt.Errorf("failed deserialize payload: %v", err)
+	}
+	return nil
+}
+
+// Validate correctness of data
+func (ref *DogRef) Validate(typeName string) error {
+	switch typeName {
+	case "es.hotdoggi.events.dog_added":
+		// TODO implement type validation and return errors
+		return nil
+	case "es.hotdoggi.events.dog_removed":
+		if ref.ID == "" {
+			return fmt.Errorf("no reference id given for type: %s", typeName)
+		}
+		return nil
+	case "es.hotdoggi.events.dog_updated":
+		if ref.ID == "" {
+			return fmt.Errorf("no reference id given for type: %s", typeName)
+		}
+		return nil
+	case "es.hotdoggi.events.dog_moved":
+		if ref.ID == "" {
+			return fmt.Errorf("no reference id given for type: %s", typeName)
+		}
+		return nil
+	default:
+		return fmt.Errorf("unrecognized type name received: %s", typeName)
+	}
 }

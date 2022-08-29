@@ -21,40 +21,13 @@ import (
 	"log"
 	"os"
 	"os/signal"
-	"time"
 
 	"github.com/sacOO7/gowebsocket"
+
+	dogs "github.com/helloworlddan/hotdoggi.es/lib/dogs"
 )
 
 const endpoint = "wss://api.hotdoggies.stamer.demo.altostrat.com/v1/dogs/"
-
-type DogRef struct {
-	ID  string `header:"id" firestore:"id" json:"id"`
-	Dog Dog    `header:"inline" firestore:"dog" json:"dog"`
-}
-
-// Dog data model
-type Dog struct {
-	Name       string   `header:"name" firestore:"name" json:"name"`
-	Breed      string   `header:"breed" firestore:"breed" json:"breed"`
-	Color      string   `header:"color" firestore:"color" json:"color"`
-	Birthday   string   `header:"birthday" firestore:"birthday" json:"birthday"`
-	PictureURL string   `header:"picture" firestore:"picture" json:"picture"`
-	Location   Location `header:"inline" firestore:"location" json:"location"`
-	Metadata   Metadata `header:"inline" firestore:"metadata" json:"metadata"`
-}
-
-// Location data model
-type Location struct {
-	Latitude  float32 `header:"latitude" firestore:"latitude" json:"latitude"`
-	Longitude float32 `header:"longitude" firestore:"longitude" json:"longitude"`
-}
-
-// Metadata data model
-type Metadata struct {
-	Owner    string    `header:"owner" firestore:"owner" json:"owner"`
-	Modified time.Time `firestore:"modified" json:"modified"`
-}
 
 const (
 	colorYellow = "\033[93m"
@@ -94,7 +67,7 @@ func main() {
 	}
 	socket.OnTextMessage = func(message string, socket gowebsocket.Socket) {
 
-		var ref DogRef
+		var ref dogs.DogRef
 		err := json.Unmarshal([]byte(message), &ref)
 		if err != nil {
 			log.Println(">>> Failed to deserialize dog update")

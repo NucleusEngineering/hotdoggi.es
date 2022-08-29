@@ -23,6 +23,8 @@ import (
 	gin "github.com/gin-gonic/gin"
 	websocket "github.com/gorilla/websocket"
 	trace "go.opentelemetry.io/otel/trace"
+
+	dogs "github.com/helloworlddan/hotdoggi.es/lib/dogs"
 )
 
 var upgrader = websocket.Upgrader{}
@@ -37,7 +39,7 @@ func ListHandler(c *gin.Context) {
 	ctx, span := (*tracer).Start(ctx, "dogs.handler:list")
 	defer span.End()
 
-	user := c.MustGet("principal").(*Principal).ID
+	user := c.MustGet("principal").(*dogs.Principal).ID
 	streaming := false
 	if upgradeHeader, ok := c.Request.Header["Upgrade"]; ok {
 		for _, upgrade := range upgradeHeader {
@@ -71,7 +73,7 @@ func ListHandler(c *gin.Context) {
 	}
 	defer conn.Close()
 
-	dogs := make(chan DogRef)
+	dogs := make(chan dogs.DogRef)
 	go ListStream(ctx, user, dogs)
 
 	for {
@@ -96,7 +98,7 @@ func GetHandler(c *gin.Context) {
 	ctx, span := (*tracer).Start(ctx, "dogs.handler:get")
 	defer span.End()
 
-	user := c.MustGet("principal").(*Principal).ID
+	user := c.MustGet("principal").(*dogs.Principal).ID
 
 	key := c.Param("key")
 	streaming := false
@@ -132,7 +134,7 @@ func GetHandler(c *gin.Context) {
 	}
 	defer conn.Close()
 
-	dogs := make(chan DogRef)
+	dogs := make(chan dogs.DogRef)
 	go GetStream(ctx, user, key, dogs)
 
 	for {
@@ -158,8 +160,8 @@ func EventHandler(c *gin.Context) {
 	defer span.End()
 
 	typeName := c.MustGet("event.type").(string)
-	caller := c.MustGet("principal").(*Principal)
-	ref := c.MustGet("event.data").(*DogRef)
+	caller := c.MustGet("principal").(*dogs.Principal)
+	ref := c.MustGet("event.data").(*dogs.DogRef)
 	switch typeName {
 	case "es.hotdoggi.events.dog_added":
 		err := dogAdded(ctx, c, caller, ref.Dog)
@@ -204,7 +206,7 @@ func EventHandler(c *gin.Context) {
 	}
 }
 
-func dogAdded(ctx context.Context, c *gin.Context, caller *Principal, dog Dog) error {
+func dogAdded(ctx context.Context, c *gin.Context, caller *dogs.Principal, dog dogs.Dog) error {
 	tracer := Global["client.trace.tracer"].(*trace.Tracer)
 	ctx, span := (*tracer).Start(ctx, "dogs.handler:event.added")
 	defer span.End()
@@ -215,7 +217,7 @@ func dogAdded(ctx context.Context, c *gin.Context, caller *Principal, dog Dog) e
 	return err
 }
 
-func dogRemoved(ctx context.Context, c *gin.Context, caller *Principal, ref *DogRef) error {
+func dogRemoved(ctx context.Context, c *gin.Context, caller *dogs.Principal, ref *dogs.DogRef) error {
 	tracer := Global["client.trace.tracer"].(*trace.Tracer)
 	ctx, span := (*tracer).Start(ctx, "dogs.handler:event.removed")
 	defer span.End()
@@ -228,7 +230,7 @@ func dogRemoved(ctx context.Context, c *gin.Context, caller *Principal, ref *Dog
 	return err
 }
 
-func dogUpdated(ctx context.Context, c *gin.Context, caller *Principal, ref *DogRef) error {
+func dogUpdated(ctx context.Context, c *gin.Context, caller *dogs.Principal, ref *dogs.DogRef) error {
 	tracer := Global["client.trace.tracer"].(*trace.Tracer)
 	ctx, span := (*tracer).Start(ctx, "dogs.handler:event.updated")
 	defer span.End()
@@ -240,7 +242,7 @@ func dogUpdated(ctx context.Context, c *gin.Context, caller *Principal, ref *Dog
 	return err
 }
 
-func dogMoved(ctx context.Context, c *gin.Context, caller *Principal, ref *DogRef, lat float32, long float32) error {
+func dogMoved(ctx context.Context, c *gin.Context, caller *dogs.Principal, ref *dogs.DogRef, lat float32, long float32) error {
 	tracer := Global["client.trace.tracer"].(*trace.Tracer)
 	ctx, span := (*tracer).Start(ctx, "dogs.handler:event.moved")
 	defer span.End()

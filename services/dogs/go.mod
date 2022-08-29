@@ -14,7 +14,7 @@
 
 module main
 
-go 1.18
+go 1.19
 
 require (
 	cloud.google.com/go/firestore v1.6.1
@@ -49,6 +49,7 @@ require (
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.1.0 // indirect
 	github.com/googleapis/gax-go/v2 v2.5.1 // indirect
+	github.com/helloworlddan/hotdoggi.es/lib/dogs v0.0.0-00010101000000-000000000000 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/mattn/go-isatty v0.0.16 // indirect
@@ -73,3 +74,5 @@ require (
 	google.golang.org/protobuf v1.28.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
+
+replace github.com/helloworlddan/hotdoggi.es/lib/dogs => ../../lib/dogs

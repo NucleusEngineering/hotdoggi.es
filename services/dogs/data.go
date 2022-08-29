@@ -23,71 +23,21 @@ import (
 	firestore "cloud.google.com/go/firestore"
 	trace "go.opentelemetry.io/otel/trace"
 	iterator "google.golang.org/api/iterator"
+
+	dogs "github.com/helloworlddan/hotdoggi.es/lib/dogs"
 )
 
 const (
 	collectionName = "es.hotdoggi.data.dogs"
 )
 
-// PubSubMessage is the data envelope used by pub/sub push subscriptions
-type PubSubMessage struct {
-	Message struct {
-		Data []byte `json:"data,omitempty"`
-		ID   string `json:"id"`
-	} `json:"message"`
-	Subscription string `json:"subscription"`
-}
-
-// Event Data is the actual event 'data' payload
-type EventData struct {
-	Principal Principal `header:"principal" firestore:"principal" json:"principal"`
-	Ref       DogRef    `header:"ref" firestore:"ref" json:"ref"`
-}
-
-// Principal represents the the identity that originally authorized the context of an interaction
-type Principal struct {
-	ID         string `header:"user_id" firestore:"user_id" json:"user_id"`
-	Email      string `header:"email" firestore:"email" json:"email"`
-	Name       string `header:"name" firestore:"name" json:"name"`
-	PictureURL string `header:"picture" firestore:"picture" json:"picture"`
-}
-
-// DogRef is the actual content of the event data besides the calling principal
-type DogRef struct {
-	ID  string `header:"id" firestore:"id" json:"id"`
-	Dog Dog    `header:"inline" firestore:"dog" json:"dog"`
-}
-
-// Dog data model
-type Dog struct {
-	Name       string   `header:"name" firestore:"name" json:"name"`
-	Breed      string   `header:"breed" firestore:"breed" json:"breed"`
-	Color      string   `header:"color" firestore:"color" json:"color"`
-	Birthday   string   `header:"birthday" firestore:"birthday" json:"birthday"`
-	PictureURL string   `header:"picture" firestore:"picture" json:"picture"`
-	Location   Location `header:"inline" firestore:"location" json:"location"`
-	Metadata   Metadata `header:"inline" firestore:"metadata" json:"metadata"`
-}
-
-// Location data model
-type Location struct {
-	Latitude  float32 `header:"latitude" firestore:"latitude" json:"latitude"`
-	Longitude float32 `header:"longitude" firestore:"longitude" json:"longitude"`
-}
-
-// Metadata data model
-type Metadata struct {
-	Owner    string    `header:"owner" firestore:"owner" json:"owner"`
-	Modified time.Time `firestore:"modified" json:"modified"`
-}
-
 // List all dogs
-func List(ctx context.Context, userID string) ([]DogRef, error) {
+func List(ctx context.Context, userID string) ([]dogs.DogRef, error) {
 	tracer := Global["client.trace.tracer"].(*trace.Tracer)
 	ctx, span := (*tracer).Start(ctx, "dogs.data:list")
 	defer span.End()
 
-	result := []DogRef{}
+	result := []dogs.DogRef{}
 	client := Global["client.firestore"].(*firestore.Client)
 	log.Printf("scanning dogs\n")
 	iter := client.Collection(collectionName).Where("metadata.owner", "==", userID).Documents(ctx)
@@ -99,9 +49,9 @@ func List(ctx context.Context, userID string) ([]DogRef, error) {
 		if err != nil {
 			return nil, err
 		}
-		var dog Dog
+		var dog dogs.Dog
 		snap.DataTo(&dog)
-		result = append(result, DogRef{
+		result = append(result, dogs.DogRef{
 			ID:  snap.Ref.ID,
 			Dog: dog,
 		})
@@ -111,7 +61,7 @@ func List(ctx context.Context, userID string) ([]DogRef, error) {
 }
 
 // ListStream will stream updates for all dogs belonging to a user back on a channel until a quit message is sent.
-func ListStream(ctx context.Context, userID string, dogs chan<- DogRef) {
+func ListStream(ctx context.Context, userID string, dogChan chan<- dogs.DogRef) {
 	tracer := Global["client.trace.tracer"].(*trace.Tracer)
 	ctx, span := (*tracer).Start(ctx, "dogs.data:list#streaming")
 	defer span.End()
@@ -127,7 +77,7 @@ func ListStream(ctx context.Context, userID string, dogs chan<- DogRef) {
 	for {
 		snap, err := iter.Next() // this is the blocking listener
 		if err != nil {
-			close(dogs)
+			close(dogChan)
 			return
 		}
 		if snap != nil {
@@ -140,10 +90,10 @@ func ListStream(ctx context.Context, userID string, dogs chan<- DogRef) {
 					// TODO what to do with different types of events?
 					// -> Nothing for now
 				case firestore.DocumentModified:
-					var dog Dog
+					var dog dogs.Dog
 					change.Doc.DataTo(&dog)
 
-					dogs <- DogRef{
+					dogChan <- dogs.DogRef{
 						ID:  change.Doc.Ref.ID,
 						Dog: dog,
 					}
@@ -154,7 +104,7 @@ func ListStream(ctx context.Context, userID string, dogs chan<- DogRef) {
 }
 
 // Get a specific dog
-func Get(ctx context.Context, userID string, key string) (DogRef, error) {
+func Get(ctx context.Context, userID string, key string) (dogs.DogRef, error) {
 	tracer := Global["client.trace.tracer"].(*trace.Tracer)
 	ctx, span := (*tracer).Start(ctx, "dogs.data:get")
 	defer span.End()
@@ -164,23 +114,23 @@ func Get(ctx context.Context, userID string, key string) (DogRef, error) {
 	log.Printf("reading dog(%s)\n", key)
 	snap, err := client.Collection(collectionName).Doc(key).Get(ctx)
 	if err != nil {
-		return DogRef{}, err
+		return dogs.DogRef{}, err
 	}
-	var dog Dog
+	var dog dogs.Dog
 	snap.DataTo(&dog)
 
 	if dog.Metadata.Owner != userID {
-		return DogRef{}, fmt.Errorf("dog not owned by user %v", userID)
+		return dogs.DogRef{}, fmt.Errorf("dog not owned by user %v", userID)
 	}
 
-	return DogRef{
+	return dogs.DogRef{
 		ID:  snap.Ref.ID,
 		Dog: dog,
 	}, nil
 }
 
 // GetStream will stream updates for a specific dog back on a channel until a quit message is sent.
-func GetStream(ctx context.Context, userID string, key string, dogs chan<- DogRef) {
+func GetStream(ctx context.Context, userID string, key string, dogChan chan<- dogs.DogRef) {
 	tracer := Global["client.trace.tracer"].(*trace.Tracer)
 	ctx, span := (*tracer).Start(ctx, "dogs.data:get#streaming")
 	defer span.End()
@@ -196,28 +146,28 @@ func GetStream(ctx context.Context, userID string, key string, dogs chan<- DogRe
 	for {
 		snap, err := iter.Next() // this is the blocking listener
 		if err != nil {
-			close(dogs)
+			close(dogChan)
 			return
 		}
 		if snap != nil {
-			var dog Dog
+			var dog dogs.Dog
 			snap.DataTo(&dog)
-			dogRef := DogRef{
+			dogRef := dogs.DogRef{
 				ID:  snap.Ref.ID,
 				Dog: dog,
 			}
 
 			if dogRef.Dog.Metadata.Owner != userID {
-				close(dogs)
+				close(dogChan)
 				return
 			}
-			dogs <- dogRef
+			dogChan <- dogRef
 		}
 	}
 }
 
 // Add a specific dog
-func Add(ctx context.Context, dog Dog) (DogRef, error) {
+func Add(ctx context.Context, dog dogs.Dog) (dogs.DogRef, error) {
 	tracer := Global["client.trace.tracer"].(*trace.Tracer)
 	ctx, span := (*tracer).Start(ctx, "dogs.data:add")
 	defer span.End()
@@ -229,17 +179,17 @@ func Add(ctx context.Context, dog Dog) (DogRef, error) {
 	log.Printf("adding new dog ... ")
 	ref, _, err := client.Collection(collectionName).Add(ctx, dog)
 	if err != nil {
-		return DogRef{}, err
+		return dogs.DogRef{}, err
 	}
 
-	return DogRef{
+	return dogs.DogRef{
 		ID:  ref.ID,
 		Dog: dog,
 	}, nil
 }
 
 // Update a specific dog
-func Update(ctx context.Context, key string, dog Dog) (DogRef, error) {
+func Update(ctx context.Context, key string, dog dogs.Dog) (dogs.DogRef, error) {
 	tracer := Global["client.trace.tracer"].(*trace.Tracer)
 	ctx, span := (*tracer).Start(ctx, "dogs.data:update")
 	defer span.End()
@@ -251,10 +201,10 @@ func Update(ctx context.Context, key string, dog Dog) (DogRef, error) {
 	log.Printf("updating dog(%s)\n", key)
 	_, err := client.Collection(collectionName).Doc(key).Set(ctx, dog)
 	if err != nil {
-		return DogRef{}, err
+		return dogs.DogRef{}, err
 	}
 
-	return DogRef{
+	return dogs.DogRef{
 		ID:  key,
 		Dog: dog,
 	}, nil
