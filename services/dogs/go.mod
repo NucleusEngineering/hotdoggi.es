@@ -75,4 +75,4 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
 
-replace github.com/helloworlddan/hotdoggi.es/lib/dogs => ../../lib/dogs
+replace github.com/helloworlddan/hotdoggi.es/lib/dogs => /app/lib/dogs
