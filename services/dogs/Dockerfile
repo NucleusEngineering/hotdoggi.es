@@ -16,7 +16,7 @@ FROM golang:1.18-bullseye as builder
 WORKDIR /app
 COPY go.* ./
 COPY lib ./lib
-RUN ls -alh
+RUN ls -alh lib
 RUN go mod edit -replace github.com/helloworlddan/hotdoggi.es/lib/dogs=lib/dogs
 RUN go mod download
 COPY . ./
