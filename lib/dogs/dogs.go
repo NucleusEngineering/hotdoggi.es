@@ -60,19 +60,19 @@ type Dog struct {
 	Metadata   Metadata `header:"inline" firestore:"metadata" json:"metadata"`
 }
 
-// Location data model
+// Location data model describing coordinates
 type Location struct {
 	Latitude  float32 `header:"latitude" firestore:"latitude" json:"latitude"`
 	Longitude float32 `header:"longitude" firestore:"longitude" json:"longitude"`
 }
 
-// Metadata data model
+// Metadata data model capturing resource ownership and modification timestamps
 type Metadata struct {
 	Owner    string    `header:"owner" firestore:"owner" json:"owner"`
 	Modified time.Time `firestore:"modified" json:"modified"`
 }
 
-// Deserialize a ref into byte array
+// Deserialize a DogRef into byte array
 func (ref *DogRef) Deserialize(buffer []byte) error {
 	err := json.Unmarshal(buffer, ref)
 	if err != nil {

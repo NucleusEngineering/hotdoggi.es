@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Pipeline to build websockets CLI client for various platform
+# Artifacts to be rsynced to GCS bucket
 steps:
   - name: 'golang'
     entrypoint: 'bash'

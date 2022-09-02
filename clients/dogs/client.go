@@ -27,6 +27,7 @@ import (
 	dogs "github.com/helloworlddan/hotdoggi.es/lib/dogs"
 )
 
+// Websockets endpoint
 const endpoint = "wss://api.hotdoggies.stamer.demo.altostrat.com/v1/dogs/"
 
 const (
@@ -36,9 +37,11 @@ const (
 )
 
 func main() {
+	// Switch to subscribe for single dog updates only
 	var dogID = flag.String("d", "", "get message for a single dog")
 	flag.Parse()
 
+	// Catch CTRL-C signals to exit streaming
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)
 
@@ -48,6 +51,7 @@ func main() {
 		Subprotocols:   []string{"chat", "superchat"},
 	}
 
+	// JWT access token for API access
 	token := os.Getenv("TOKEN")
 	if token == "" {
 		log.Fatalln("no credentials provided in $TOKEN")
@@ -67,12 +71,14 @@ func main() {
 	}
 	socket.OnTextMessage = func(message string, socket gowebsocket.Socket) {
 
+		// Deserialize received JSON update
 		var ref dogs.DogRef
 		err := json.Unmarshal([]byte(message), &ref)
 		if err != nil {
 			log.Println(">>> Failed to deserialize dog update")
 		}
 
+		// Pretty print received update to STDOUT
 		fmt.Printf("%s\t%s%s%s\tmoved to %s(%f,%f)%s\n", ref.ID, colorRed, ref.Dog.Name, colorWhite, colorYellow, ref.Dog.Location.Latitude, ref.Dog.Location.Longitude, colorWhite)
 	}
 	socket.OnDisconnected = func(err error, socket gowebsocket.Socket) {
@@ -80,6 +86,7 @@ func main() {
 	}
 	socket.Connect()
 
+	// Listener for CTRL-C exit signals
 	for range interrupt {
 		fmt.Println()
 		log.Println(">>> Exiting ...")
