@@ -31,11 +31,12 @@ from opentelemetry.exporter.cloud_trace import CloudTraceSpanExporter
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
 
+# Global constants for service identification
 PREFIX_IDENTIFIER = "es.hotdoggi"
 SERVICE_NAME = "analytics"
 
 def create_tracer():
-    # Default to PROD, sample rate 10%
+    """ Create open telemetry tracer and configure sample exporter """
     tracer_provider = TracerProvider()
     cloud_trace_exporter = CloudTraceSpanExporter()
     tracer_provider.add_span_processor(
@@ -50,35 +51,41 @@ def create_tracer():
 app = Flask(__name__)
 tracer = create_tracer()
 
+
 @app.route("/v1/events/", methods=["POST"])
 def index():
+    """ Single POST endpoint for receiving events """
     event = unwrap(request)
-    
+
     # Explicitly override context from original event trace
     ctx = parent_context(event["traceparent"])
 
+    # Begin event span
     with tracer.start_as_current_span("analytics.handler:event", context=ctx):
         identifier = event["id"]
         type_name = event["type"]
         print(f"processing event: {identifier}")
 
+        # Initialize BQ client
         client = bigquery.Client()
 
         project_id = os.environ["GOOGLE_CLOUD_PROJECT"]
         dataset_name = os.environ["BQ_DATASET"]
         table_name = type_name.replace(".", "_")
 
+        # Check if target table exists in BQ dataset
         try:
             with tracer.start_as_current_span("analytics.data:check"):
                 client.get_table(f"{project_id}.{dataset_name}.{table_name}")
         except NotFound:
-            # Job insertion with schema auto detection
+            # Table does not exist
             with tracer.start_as_current_span("analytics.data:load"):
                 print(f"loading job: {identifier}:{table_name}")
 
                 dataset_ref = client.dataset(dataset_name)
                 table_ref = dataset_ref.table(table_name)
 
+                # Create load job with automatic schema detection to create new table
                 job_config = bigquery.LoadJobConfig()
                 job_config.source_format = bigquery.SourceFormat.NEWLINE_DELIMITED_JSON
                 job_config.autodetect = True
@@ -95,7 +102,7 @@ def index():
                 print(f"pushed job: {job.job_id}")
                 return ("", 204)
 
-        # Stream insertion
+        # Table exists, stream events
         with tracer.start_as_current_span("analytics.data:insert"):
             print(f"streaming insert: {identifier}:{table_name}")
             rows = [
@@ -110,17 +117,21 @@ def index():
 
 
 def parent_context(traceparent):
+    """ Rehydrate trace context propagated and embedded in event """
     carrier = {'traceparent': traceparent}
     ctx = TraceContextTextMapPropagator().extract(carrier=carrier)
-    
+
     print(f"picked up trace: {ctx}")
 
     return ctx
 
 
 def unwrap(request):
+    """ Unwrap and deserialize CloudEvent from Pub/Sub message """
     envelope = request.get_json()
     print(f"received: {json.dumps(envelope)}")
+
+    # Check for Pub/Sub message format
     if not envelope:
         msg = "no Pub/Sub message received"
         print(f"error: {msg}")
@@ -135,7 +146,10 @@ def unwrap(request):
 
     data = None
     if isinstance(pubsub_message, dict) and "data" in pubsub_message:
+        # Check are OK, decode Pub/Sub message payload
         data = base64.b64decode(pubsub_message["data"]).decode("utf-8").strip()
+
+    # Deserialize into CloudEvent
     event = from_json(data)
 
     return event
@@ -145,4 +159,5 @@ if __name__ == "__main__":
     debug = False
     if os.getenv("ENVIRONMENT") == "dev":
         debug = True
-    app.run(debug=debug, host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
+    app.run(debug=debug, host="0.0.0.0",
+            port=int(os.environ.get("PORT", 8080)))

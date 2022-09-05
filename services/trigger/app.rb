@@ -17,9 +17,11 @@ require 'functions_framework'
 require 'opencensus-stackdriver'
 require 'cloud_events'
 
+# Global constants for service identification
 PREFIX_IDENTIFIER = "es.hotdoggi"
 SERVICE_NAME = "trigger"
 
+# Initialize FireStore and Pub/Sub client on startup, configure trace exporter
 FunctionsFramework.on_startup do
   # Create clients
   set_global :firestore_client do
@@ -35,11 +37,17 @@ FunctionsFramework.on_startup do
   end
 end
 
+# Define single HTTP POST endpoint for receiving CloudEvents
+# NOTE: Unlike the other services, this endpoint subscribes to
+#       CloudEvents created and pushed by Firestore; it's not
+#       subscribing to hotdoggi.es CloudEvents. They are all
+#       just CloudEvents, but from a different source and of a
+#       different type.
 FunctionsFramework.cloud_event 'function' do |fs_event|
 
   prefix = "#{PREFIX_IDENTIFIER}.services.#{SERVICE_NAME}/"
 
-  # Pickup W3C trace context
+  # Pickup W3C trace context from propagated traceparent
   traceparent = fs_event.data['value']['fields']['traceparent']['stringValue']
   trace_context = OpenCensus::Trace::TraceContextData.new(
     traceparent.split('-')[1],
@@ -48,14 +56,18 @@ FunctionsFramework.cloud_event 'function' do |fs_event|
   )
   trace = OpenCensus::Trace::SpanContext.create_root(trace_context: trace_context)
 
+  # Begin event span
   trace.in_span "#{prefix}trigger.handler:event" do |_span|
     event_type = fs_event.subject.split('/')[-2]
     event_id = fs_event.subject.split('/')[-1]
     logger.info "detected change to: #{event_type}:#{event_id}"
 
     event = nil
+    # Begin data load span
     trace.in_span "#{prefix}trigger.data:load" do |_subspan|
+      # Load event from Firestore
       doc = global(:firestore_client).col(event_type).doc(event_id).get
+      # Explicitly define CloudEvent
       event = CloudEvents::Event.create(
         id: event_id,
         type: event_type,
@@ -70,8 +82,10 @@ FunctionsFramework.cloud_event 'function' do |fs_event|
       logger.info "received event: #{event.to_h}"
     end
 
+    # Begin pub/sub publish span
     trace.in_span "#{prefix}trigger.message:publish" do |_subspan|
       topic = global(:pubsub_client).topic ENV['TOPIC']
+      # Publish message
       result = topic.publish event.to_h.to_json,
         type: event.type,
         source: event.source

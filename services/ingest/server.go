@@ -29,6 +29,7 @@ import (
 	trace "go.opentelemetry.io/otel/trace"
 )
 
+// Global constants for service identification
 const (
 	prefixIdentifier string = "es.hotdoggi"
 	serviceName      string = "ingest"
@@ -48,7 +49,7 @@ func main() {
 	events := router.Group("/v1/events")
 	events.Use(UserContextFromAPI)
 	events.POST("/:type/:source", EventHandler)
-	events.OPTIONS("/:type/:source", OptionsHandler) // CORS preflights
+	events.OPTIONS("/:type/:source", OptionsHandler) // CORS preflight
 
 	log.Println("Starting server.")
 	log.Fatalf("error: %v", router.Run())
