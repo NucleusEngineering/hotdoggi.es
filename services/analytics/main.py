@@ -161,7 +161,7 @@ def unwrap(request):
 def omit_empty(dict_map):
     """ Recursively drop empty values from dict """
     if type(dict_map) is dict:
-        return dict((key, omit_empty(value)) for key, value in dict_map.iteritems() if value and omit_empty(value))
+        return dict((key, omit_empty(value)) for key, value in dict_map.items() if value and omit_empty(value))
     else:
         return dict_map
 
