@@ -56,7 +56,7 @@ tracer = create_tracer()
 def index():
     """ Single POST endpoint for receiving events """
     event = unwrap(request)
-    print(json.dumps(event))
+    print(to_json(event))
 
     # Explicitly override context from original event trace
     ctx = parent_context(event["traceparent"])
