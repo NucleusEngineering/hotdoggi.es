@@ -45,25 +45,25 @@ type Principal struct {
 
 // DogRef is the actual content of the event data besides the calling principal
 type DogRef struct {
-	ID  string `header:"id" firestore:"id,omitempty" json:"id"`
-	Dog Dog    `header:"inline" firestore:"dog,omitempty" json:"dog"`
+	ID  string `header:"id" firestore:"id,omitempty" json:"id,omitempty"`
+	Dog Dog    `header:"inline" firestore:"dog,omitempty" json:"dog,omitempty"`
 }
 
 // Dog data model
 type Dog struct {
-	Name       string   `header:"name" firestore:"name,omitempty" json:"name"`
-	Breed      string   `header:"breed" firestore:"breed,omitempty" json:"breed"`
-	Color      string   `header:"color" firestore:"color,omitempty" json:"color"`
-	Birthday   string   `header:"birthday" firestore:"birthday,omitempty" json:"birthday"`
-	PictureURL string   `header:"picture" firestore:"picture,omitempty" json:"picture"`
-	Location   Location `header:"inline" firestore:"location,omitempty" json:"location"`
-	Metadata   Metadata `header:"inline" firestore:"metadata,omitempty" json:"metadata"`
+	Name       string   `header:"name" firestore:"name,omitempty" json:"name,omitempty"`
+	Breed      string   `header:"breed" firestore:"breed,omitempty" json:"breed,omitempty"`
+	Color      string   `header:"color" firestore:"color,omitempty" json:"color,omitempty"`
+	Birthday   string   `header:"birthday" firestore:"birthday,omitempty" json:"birthday,omitempty"`
+	PictureURL string   `header:"picture" firestore:"picture,omitempty" json:"picture,omitempty"`
+	Location   Location `header:"inline" firestore:"location,omitempty" json:"location,omitempty"`
+	Metadata   Metadata `header:"inline" firestore:"metadata,omitempty" json:"metadata,omitempty"`
 }
 
 // Location data model describing coordinates
 type Location struct {
-	Latitude  float32 `header:"latitude" firestore:"latitude,omitempty" json:"latitude"`
-	Longitude float32 `header:"longitude" firestore:"longitude,omitempty" json:"longitude"`
+	Latitude  float32 `header:"latitude" firestore:"latitude,omitempty" json:"latitude,omitempty"`
+	Longitude float32 `header:"longitude" firestore:"longitude,omitempty" json:"longitude,omitempty"`
 }
 
 // Metadata data model capturing resource ownership and modification timestamps

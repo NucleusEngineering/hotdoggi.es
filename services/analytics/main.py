@@ -152,8 +152,18 @@ def unwrap(request):
     # Deserialize into CloudEvent
     event = from_json(data)
 
+    # Strip empty values from dict
+    event = omit_empty(event)
+
     return event
 
+
+def omit_empty(dict_map):
+    """ Recursively drop empty values from dict """
+    if type(dict_map) is dict:
+        return dict((key, omit_empty(value)) for key, value in dict_map.iteritems() if value and omit_empty(value))
+    else:
+        return dict_map
 
 if __name__ == "__main__":
     debug = False

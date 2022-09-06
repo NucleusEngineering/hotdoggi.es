@@ -108,17 +108,19 @@ def simulateDogMovement(dog):
     """ Simulate dog movement by randomly updating coordinates and pushing dog_moved events to the API """
     while not terminate:
         update = getDog(dog)
+        new_latitude = randomMovement(update['dog']['location']['latitude'])
+        new_longitude = randomMovement(update['dog']['location']['longitude'])
         data = {
             "id": dog['id'],
             "dog": {
                 "location": {
-                    "longitude": randomMovement(update['dog']['location']['longitude']),
-                    "latitude": randomMovement(update['dog']['location']['latitude'])
+                    "latitude": new_latitude,
+                    "longitude": new_longitude
                 }
             } 
         }
         event_type = "es.hotdoggi.events.dog_moved"
-        print(f"{colors.BLUE}ASYNC[{event_type}]\t{colors.WHITE} moving {colors.RED}{dog['dog']['name']}{colors.WHITE} to {colors.YELLOW}({data['dog']['location']['latitude']},{data['dog']['location']['latitude']}){colors.WHITE}")
+        print(f"{colors.BLUE}ASYNC[{event_type}]\t{colors.WHITE} moving {colors.RED}{dog['dog']['name']}{colors.WHITE} to {colors.YELLOW}({new_latitude},{new_longitude}){colors.WHITE}")
 
         r = requests.post(f"{endpoint}/v1/events/{event_type}/{source}", data=json.dumps(data), headers=headers)
         if r.status_code != 201:
