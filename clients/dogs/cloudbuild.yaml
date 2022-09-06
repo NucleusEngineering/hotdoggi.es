@@ -37,4 +37,4 @@ steps:
     - 'pipefail'
     - '-c'
     - |-
-      gsutil rsync -d -r /workspace/builds gs://$_BUCKET
+      gsutil -m rsync -d -r /workspace/builds gs://$_BUCKET
