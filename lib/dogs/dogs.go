@@ -45,7 +45,7 @@ type Principal struct {
 
 // DogRef is the actual content of the event data besides the calling principal
 type DogRef struct {
-	ID  string `header:"id" firestore:"id" json:"id"`
+	ID  string `header:"id" firestore:"id,omitempty" json:"id"`
 	Dog Dog    `header:"inline" firestore:"dog" json:"dog"`
 }
 
@@ -57,7 +57,7 @@ type Dog struct {
 	Birthday   string   `header:"birthday" firestore:"birthday" json:"birthday"`
 	PictureURL string   `header:"picture" firestore:"picture" json:"picture"`
 	Location   Location `header:"inline" firestore:"location" json:"location"`
-	Metadata   Metadata `header:"inline" firestore:"metadata" json:"metadata"`
+	Metadata   Metadata `header:"inline" firestore:"metadata,omitempty" json:"metadata"`
 }
 
 // Location data model describing coordinates
@@ -68,7 +68,7 @@ type Location struct {
 
 // Metadata data model capturing resource ownership and modification timestamps
 type Metadata struct {
-	Owner    string    `header:"owner" firestore:"owner" json:"owner"`
+	Owner    string    `header:"owner" firestore:"owner,omitempty" json:"owner"`
 	Modified time.Time `header:"modified" firestore:"modified,omitempty" json:"modified"`
 }
 
