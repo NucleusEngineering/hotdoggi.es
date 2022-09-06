@@ -38,7 +38,7 @@ func List(ctx context.Context, userID string) ([]dogs.DogRef, error) {
 	defer span.End()
 
 	result := []dogs.DogRef{}
-	client := Global["client.firestore"].(*firestore.Client)x
+	client := Global["client.firestore"].(*firestore.Client)
 	log.Printf("scanning dogs\n")
 	iter := client.Collection(collectionName).Where("metadata.owner", "==", userID).Documents(ctx)
 	for {
