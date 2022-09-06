@@ -46,24 +46,24 @@ type Principal struct {
 // DogRef is the actual content of the event data besides the calling principal
 type DogRef struct {
 	ID  string `header:"id" firestore:"id,omitempty" json:"id"`
-	Dog Dog    `header:"inline" firestore:"dog" json:"dog"`
+	Dog Dog    `header:"inline" firestore:"dog,omitempty" json:"dog"`
 }
 
 // Dog data model
 type Dog struct {
-	Name       string   `header:"name" firestore:"name" json:"name"`
-	Breed      string   `header:"breed" firestore:"breed" json:"breed"`
-	Color      string   `header:"color" firestore:"color" json:"color"`
-	Birthday   string   `header:"birthday" firestore:"birthday" json:"birthday"`
-	PictureURL string   `header:"picture" firestore:"picture" json:"picture"`
-	Location   Location `header:"inline" firestore:"location" json:"location"`
+	Name       string   `header:"name" firestore:"name,omitempty" json:"name"`
+	Breed      string   `header:"breed" firestore:"breed,omitempty" json:"breed"`
+	Color      string   `header:"color" firestore:"color,omitempty" json:"color"`
+	Birthday   string   `header:"birthday" firestore:"birthday,omitempty" json:"birthday"`
+	PictureURL string   `header:"picture" firestore:"picture,omitempty" json:"picture"`
+	Location   Location `header:"inline" firestore:"location,omitempty" json:"location"`
 	Metadata   Metadata `header:"inline" firestore:"metadata,omitempty" json:"metadata"`
 }
 
 // Location data model describing coordinates
 type Location struct {
-	Latitude  float32 `header:"latitude" firestore:"latitude" json:"latitude"`
-	Longitude float32 `header:"longitude" firestore:"longitude" json:"longitude"`
+	Latitude  float32 `header:"latitude" firestore:"latitude,omitempty" json:"latitude"`
+	Longitude float32 `header:"longitude" firestore:"longitude,omitempty" json:"longitude"`
 }
 
 // Metadata data model capturing resource ownership and modification timestamps
