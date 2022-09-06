@@ -19,8 +19,8 @@ import json
 
 from flask import Flask, request
 
-from cloudevents import to_dict, from_dict
-from cloudevents.http import to_json, from_json
+from cloudevents.http import to_json
+from cloudevents.http.conversion import from_dict
 
 from google.cloud import bigquery
 from google.cloud.exceptions import NotFound
@@ -151,15 +151,14 @@ def unwrap(request):
         # Check are OK, decode Pub/Sub message payload
         data = base64.b64decode(pubsub_message["data"]).decode("utf-8").strip()
 
-    # Deserialize into CloudEvent
-    event = from_json(data)
-
+    event_dict = json.loads(data)
 
     # Strip empty values from dict
-    dict_event = to_dict(event)
-    dict_event = omit_empty(event)
-    event = from_dict(dict_event)
+    event_dict = omit_empty(event_dict)
 
+    # Deserialize into CloudEvent
+    event = from_dict(event_dict)
+    
     return event
 
 
