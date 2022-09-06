@@ -19,8 +19,7 @@ import json
 
 from flask import Flask, request
 
-from cloudevents.conversion import to_structured
-from cloudevents.http import from_json, to_json, from_dict
+from cloudevents.http import to_json, from_dict
 
 from google.cloud import bigquery
 from google.cloud.exceptions import NotFound
@@ -151,12 +150,11 @@ def unwrap(request):
         # Check are OK, decode Pub/Sub message payload
         data = base64.b64decode(pubsub_message["data"]).decode("utf-8").strip()
 
-    # Deserialize into CloudEvent
-    event = from_json(data)
-
     # Strip empty values from dict
-    d_event, _ = to_structured(event)
+    d_event = json.loads(data)
     d_event = omit_empty(d_event)
+    
+    # Deserialize into CloudEvent
     event = from_dict(d_event)
 
     return event
@@ -165,7 +163,7 @@ def unwrap(request):
 def omit_empty(dict_map):
     """ Recursively drop empty values from dict """
     print(f'found type {type(dict_map)}')
-    
+
     if type(dict_map) is dict:
         return dict((key, omit_empty(value)) for key, value in dict_map.items() if value and omit_empty(value))
     else:
