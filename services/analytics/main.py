@@ -19,7 +19,7 @@ import json
 
 from flask import Flask, request
 
-from cloudevents.http import from_json, to_json
+from cloudevents.http import from_json, to_json, to_dict, from_dict
 
 from google.cloud import bigquery
 from google.cloud.exceptions import NotFound
@@ -154,7 +154,10 @@ def unwrap(request):
     event = from_json(data)
 
     # Strip empty values from dict
-    event = omit_empty(event)
+    d_event = to_dict(event)
+    d_event = omit_empty(d_event)
+
+    event = from_dict(d_event)
 
     return event
 
