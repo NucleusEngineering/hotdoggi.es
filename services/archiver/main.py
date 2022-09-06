@@ -18,7 +18,8 @@ import json
 
 from flask import Flask, request
 
-from cloudevents.http import CloudEvent, from_json, to_json
+from cloudevents.http import to_json
+from cloudevents.http.conversion import from_dict
 
 from google.cloud import storage
 
@@ -121,10 +122,23 @@ def unwrap(request):
         # Check are OK, decode Pub/Sub message payload
         data = base64.b64decode(pubsub_message["data"]).decode("utf-8").strip()
 
+    event_dict = json.loads(data)
+
+    # Strip empty values from dict
+    event_dict = omit_empty(event_dict)
+
     # Deserialize into CloudEvent
-    event = from_json(data)
+    event = from_dict(event_dict)
 
     return event
+
+
+def omit_empty(dict_map):
+    """ Recursively drop empty values from dict """
+    if type(dict_map) is dict:
+        return dict((key, omit_empty(value)) for key, value in dict_map.items() if value and omit_empty(value))
+    else:
+        return dict_map
 
 
 if __name__ == "__main__":

@@ -57,7 +57,6 @@ tracer = create_tracer()
 def index():
     """ Single POST endpoint for receiving events """
     event = unwrap(request)
-    print(to_json(event))
 
     # Explicitly override context from original event trace
     ctx = parent_context(event["traceparent"])
@@ -158,14 +157,12 @@ def unwrap(request):
 
     # Deserialize into CloudEvent
     event = from_dict(event_dict)
-    
+
     return event
 
 
 def omit_empty(dict_map):
     """ Recursively drop empty values from dict """
-    print(f'found type {type(dict_map)}')
-
     if type(dict_map) is dict:
         return dict((key, omit_empty(value)) for key, value in dict_map.items() if value and omit_empty(value))
     else:

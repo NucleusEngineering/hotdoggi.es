@@ -1,4 +1,4 @@
-cloudevents==1.2.0
+cloudevents==1.6.1
 Flask==2.0.1
 gunicorn==20.1.0
 google-cloud-storage==1.42.2
