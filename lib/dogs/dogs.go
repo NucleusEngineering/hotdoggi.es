@@ -69,7 +69,7 @@ type Location struct {
 // Metadata data model capturing resource ownership and modification timestamps
 type Metadata struct {
 	Owner    string    `header:"owner" firestore:"owner" json:"owner"`
-	Modified time.Time `firestore:"modified" json:"modified"`
+	Modified time.Time `header:"modified" firestore:"modified,omitempty" json:"modified"`
 }
 
 // Deserialize a DogRef into byte array
