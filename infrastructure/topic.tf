@@ -26,6 +26,9 @@ resource "google_pubsub_subscription" "subscription" {
   project = local.project
   name    = "${local.prefix}-dead-letter-pull"
   topic   = google_pubsub_topic.dead-letter.name
+  expiration_policy {
+    ttl = "99999999s"
+  }
 }
 
 resource "google_project_iam_member" "pubsub-sa-tokencreator" {
