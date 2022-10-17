@@ -61,6 +61,7 @@ resource "google_cloud_run_service" "analytics" {
         resources {
           limits = {
             memory = "1024Mi"
+            cpu = "1000m"
           }
         }
       }
@@ -69,6 +70,9 @@ resource "google_cloud_run_service" "analytics" {
   metadata {
     annotations = {
       "run.googleapis.com/ingress" = "all"
+      "client.knative.dev/user-image"     = "gcr.io/${local.project}/analytics"
+      "run.googleapis.com/client-name"    = "gcloud"
+      "run.googleapis.com/client-version" = local.gcloud_version
     }
   }
   traffic {

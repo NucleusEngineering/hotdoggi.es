@@ -61,6 +61,7 @@ resource "google_cloud_run_service" "archiver" {
         resources {
           limits = {
             memory = "1024Mi"
+            cpu = "1000m"
           }
         }
       }
@@ -68,7 +69,10 @@ resource "google_cloud_run_service" "archiver" {
   }
   metadata {
     annotations = {
-      "run.googleapis.com/ingress" = "all"
+     "run.googleapis.com/ingress" = "all"
+      "client.knative.dev/user-image"     = "gcr.io/${local.project}/archiver"
+      "run.googleapis.com/client-name"    = "gcloud"
+      "run.googleapis.com/client-version" = local.gcloud_version
     }
   }
   traffic {

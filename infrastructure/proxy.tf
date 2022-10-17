@@ -53,12 +53,21 @@ resource "google_cloud_run_service" "proxy" {
 
       containers {
         image = "gcr.io/${local.project}/proxy"
+        resources {
+          limits = {
+            memory = "512Mi"
+            cpu = "1000m"
+          }
+        }
       }
     }
   }
   metadata {
     annotations = {
-      "run.googleapis.com/ingress" = "all"
+            "run.googleapis.com/ingress" = "all"
+      "client.knative.dev/user-image"     = "gcr.io/${local.project}/proxy"
+      "run.googleapis.com/client-name"    = "gcloud"
+      "run.googleapis.com/client-version" = local.gcloud_version
     }
   }
   traffic {
