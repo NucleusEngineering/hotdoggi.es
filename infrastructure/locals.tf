@@ -23,7 +23,7 @@ locals {
   repo_owner     = "helloworlddan"
   branch         = "main"
   user           = "admin@stamer.altostrat.com"
-  gcloud_version  = "399.0.0"
+  gcloud_version = "404.0.0"
 }
 
 output "project" {

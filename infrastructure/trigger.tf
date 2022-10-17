@@ -73,6 +73,10 @@ resource "google_cloudfunctions_function" "function" {
     resource   = "projects/${local.project}/databases/(default)/documents/{collection}/{event}"
   }
 
+  labels = {
+    deployment-tool = "cli-gcloud"
+  }
+
   environment_variables = {
     TOPIC                = google_pubsub_topic.topic.name,
     GOOGLE_CLOUD_PROJECT = local.project

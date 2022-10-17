@@ -61,7 +61,7 @@ resource "google_cloud_run_service" "ingest" {
         resources {
           limits = {
             memory = "256Mi"
-            cpu = "1000m"
+            cpu    = "1000m"
           }
         }
       }
@@ -69,7 +69,7 @@ resource "google_cloud_run_service" "ingest" {
   }
   metadata {
     annotations = {
-      "run.googleapis.com/ingress" = "all"
+      "run.googleapis.com/ingress"        = "all"
       "client.knative.dev/user-image"     = "gcr.io/${local.project}/ingest"
       "run.googleapis.com/client-name"    = "gcloud"
       "run.googleapis.com/client-version" = local.gcloud_version

@@ -48,7 +48,7 @@ resource "google_cloud_run_service" "proxy" {
   template {
     spec {
       service_account_name = google_service_account.proxy.email
-      
+
       timeout_seconds = 3600
 
       containers {
@@ -56,7 +56,7 @@ resource "google_cloud_run_service" "proxy" {
         resources {
           limits = {
             memory = "512Mi"
-            cpu = "1000m"
+            cpu    = "1000m"
           }
         }
       }
@@ -64,7 +64,7 @@ resource "google_cloud_run_service" "proxy" {
   }
   metadata {
     annotations = {
-            "run.googleapis.com/ingress" = "all"
+      "run.googleapis.com/ingress"        = "all"
       "client.knative.dev/user-image"     = "gcr.io/${local.project}/proxy"
       "run.googleapis.com/client-name"    = "gcloud"
       "run.googleapis.com/client-version" = local.gcloud_version

@@ -64,7 +64,7 @@ resource "google_cloud_run_service" "dogs" {
         resources {
           limits = {
             memory = "256Mi"
-            cpu = "1000m"
+            cpu    = "1000m"
           }
         }
       }
@@ -72,7 +72,7 @@ resource "google_cloud_run_service" "dogs" {
   }
   metadata {
     annotations = {
-      "run.googleapis.com/ingress" = "all"
+      "run.googleapis.com/ingress"        = "all"
       "client.knative.dev/user-image"     = "gcr.io/${local.project}/dogs"
       "run.googleapis.com/client-name"    = "gcloud"
       "run.googleapis.com/client-version" = local.gcloud_version
@@ -110,6 +110,9 @@ resource "google_pubsub_subscription" "dogs" {
     oidc_token {
       service_account_email = google_service_account.pubsub-pusher.email
     }
+  }
+  expiration_policy {
+    ttl = "99999999s"
   }
   dead_letter_policy {
     dead_letter_topic     = google_pubsub_topic.dead-letter.id
