@@ -21,14 +21,7 @@ var loginGoogleCmd = &cobra.Command{
 }
 
 func accessTokenGoogle() {
-	config := &oauth2.Config{
-		ClientID:     viper.GetString("google.clientID"),
-		ClientSecret: viper.GetString("google.clientSecret"),
-		RedirectURL:  fmt.Sprintf("http://localhost:%s", callbackPort),
-		Scopes:       []string{"https://www.googleapis.com/auth/userinfo.email"},
-		Endpoint:     google.Endpoint,
-	}
-
+	config := configGoogle()
 	authURL := config.AuthCodeURL("state-token", oauth2.AccessTypeOffline)
 
 	codeChan := make(chan string, 1)
@@ -47,9 +40,23 @@ func accessTokenGoogle() {
 	viper.Set("token.expiry", token.Expiry)
 	viper.Set("token.refresh", token.RefreshToken)
 	viper.Set("token.type", token.TokenType)
+
+	// TODO need id_token as described in https://developers.google.com/identity/openid-connect/openid-connect#exchangecode
+	// Probably with an OIDC lib
+
 	err = viper.WriteConfig()
 	if err != nil {
 		fail(err)
+	}
+}
+
+func configGoogle() *oauth2.Config {
+	return &oauth2.Config{
+		ClientID:     viper.GetString("google.clientID"),
+		ClientSecret: viper.GetString("google.clientSecret"),
+		RedirectURL:  fmt.Sprintf("http://localhost:%s", callbackPort),
+		Scopes:       []string{"https://www.googleapis.com/auth/userinfo.email"},
+		Endpoint:     google.Endpoint,
 	}
 }
 

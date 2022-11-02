@@ -9,6 +9,8 @@ import (
 	"runtime"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+	"golang.org/x/oauth2"
 )
 
 const (
@@ -19,6 +21,29 @@ var loginCmd = &cobra.Command{
 	Use:   "login",
 	Short: fmt.Sprintf("login to %s.", appName),
 	Long:  fmt.Sprintf("login to %s.", appName),
+}
+
+func getTokenWithConfig() (*oauth2.Token, *oauth2.Config, error) {
+	token := new(oauth2.Token)
+	token.AccessToken = viper.GetString("token.access")
+	token.RefreshToken = viper.GetString("token.refresh")
+	token.TokenType = viper.GetString("token.type")
+	token.Expiry = viper.GetTime("token.expiry")
+
+	issuer := viper.GetString("token.issuer")
+
+	if issuer == "" {
+		return nil, nil, fmt.Errorf("no credentials found. Try running '%s login'", appNameShort)
+	}
+
+	switch issuer {
+	case "google":
+		return token, configGoogle(), nil
+	case "github":
+		return nil, nil, fmt.Errorf("unimplemented token issuer: github")
+	default:
+		return nil, nil, fmt.Errorf("invalid token issuer: %s", issuer)
+	}
 }
 
 func codeViaTerminal(url string, codeChan chan string) {
