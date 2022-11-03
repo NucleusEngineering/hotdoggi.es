@@ -47,8 +47,7 @@ func Execute() {
 		// Create default config
 		viper.Set("google.clientID", "")
 		viper.Set("google.clientSecret", "")
-		viper.Set("", "")
-		viper.Set("oauthStateString", "")
+		viper.Set("google.apikey", "")
 		err = viper.WriteConfig()
 		if err != nil {
 			fail(err)

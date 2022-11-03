@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/http"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -16,18 +17,17 @@ var loginGoogleCmd = &cobra.Command{
 	Short: fmt.Sprintf("use Google to login to %s.", appName),
 	Long:  fmt.Sprintf("use Google to login to %s.", appName),
 	Run: func(cmd *cobra.Command, args []string) {
-		accessTokenGoogle()
+		authenticateGoogle()
 	},
 }
 
-func accessTokenGoogle() {
+func authenticateGoogle() {
 	config := configGoogle()
 	authURL := config.AuthCodeURL("state-token", oauth2.AccessTypeOffline)
 
 	codeChan := make(chan string, 1)
-	go codeViaTerminal(authURL, codeChan)
-	go codeViaCallback(authURL, codeChan)
-
+	go codeViaTerminalGoogle(authURL, codeChan)
+	go codeViaCallbackGoogle(authURL, codeChan)
 	authCode := <-codeChan
 
 	token, err := config.Exchange(context.TODO(), authCode)
@@ -40,9 +40,7 @@ func accessTokenGoogle() {
 	viper.Set("token.expiry", token.Expiry)
 	viper.Set("token.refresh", token.RefreshToken)
 	viper.Set("token.type", token.TokenType)
-
-	// TODO need id_token as described in https://developers.google.com/identity/openid-connect/openid-connect#exchangecode
-	// Probably with an OIDC lib
+	viper.Set("token.identity", token.Extra("id_token").(string))
 
 	err = viper.WriteConfig()
 	if err != nil {
@@ -58,6 +56,37 @@ func configGoogle() *oauth2.Config {
 		Scopes:       []string{"https://www.googleapis.com/auth/userinfo.email"},
 		Endpoint:     google.Endpoint,
 	}
+}
+
+func codeViaTerminalGoogle(url string, codeChan chan string) {
+	fmt.Printf("Go to the following link: \n%v\n\n", url)
+	fmt.Printf("Paste back the code you received in this terminal: \n")
+	var authCode string
+	if _, err := fmt.Scan(&authCode); err != nil {
+		log.Fatalf("Unable to read authorization code %v", err)
+	}
+	codeChan <- authCode
+}
+
+func codeViaCallbackGoogle(url string, codeChan chan string) {
+	server := &http.Server{Addr: fmt.Sprintf(":%s", callbackPort)}
+
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		code := r.URL.Query().Get("code")
+		if code != "" {
+			codeChan <- r.URL.Query().Get("code")
+			err := server.Shutdown(context.Background())
+			if err != nil {
+				fail(err)
+			}
+		}
+	})
+
+	err := openBrowser(url)
+	if err != nil {
+		fail(err)
+	}
+	server.ListenAndServe()
 }
 
 func init() {
