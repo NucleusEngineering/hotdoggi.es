@@ -12,6 +12,10 @@ const (
 	callbackPort = "8934"
 )
 
+var (
+	redirectURI = fmt.Sprintf("http://localhost:%s/", callbackPort)
+)
+
 var loginCmd = &cobra.Command{
 	Use:   "login",
 	Short: fmt.Sprintf("login to %s.", appName),

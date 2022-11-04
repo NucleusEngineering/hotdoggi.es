@@ -1,15 +1,22 @@
 package cmd
 
 import (
-	"context"
+	"bytes"
+	"encoding/json"
 	"fmt"
-	"log"
+	"io"
 	"net/http"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"golang.org/x/oauth2"
-	"golang.org/x/oauth2/google"
+)
+
+const (
+	providerIDGoogle  = "google.com"
+	mimeTypeAPIGoogle = "application/json"
+
+	authURIEndpointGoogle = "https://identitytoolkit.googleapis.com/v1/accounts:createAuthUri"
+	signInEndpointGoogle  = "https://identitytoolkit.googleapis.com/v1/accounts:signInWithIdp"
 )
 
 var loginGoogleCmd = &cobra.Command{
@@ -22,25 +29,30 @@ var loginGoogleCmd = &cobra.Command{
 }
 
 func authenticateGoogle() {
-	config := configGoogle()
-	authURL := config.AuthCodeURL("state-token", oauth2.AccessTypeOffline)
-
-	codeChan := make(chan string, 1)
-	go codeViaTerminalGoogle(authURL, codeChan)
-	go codeViaCallbackGoogle(authURL, codeChan)
-	authCode := <-codeChan
-
-	token, err := config.Exchange(context.TODO(), authCode)
+	authURI, sessionID, err := getAuthUriGoogle()
 	if err != nil {
-		log.Fatalf("Unable to retrieve token from web %v", err)
+		fail(err)
 	}
 
-	viper.Set("token.issuer", "google")
-	viper.Set("token.access", token.AccessToken)
-	viper.Set("token.expiry", token.Expiry)
-	viper.Set("token.refresh", token.RefreshToken)
-	viper.Set("token.type", token.TokenType)
-	viper.Set("token.identity", token.Extra("id_token").(string))
+	authResponseChan := make(chan string, 1)
+	go codeViaCallbackGoogle(authURI, authResponseChan)
+	authResponse := <-authResponseChan
+
+	fmt.Println(authResponse)
+
+	exchangeResponse, err := exchangeTokenGoogle(authResponse, sessionID)
+	if err != nil {
+		fail(err)
+	}
+
+	fmt.Println(exchangeResponse)
+
+	// viper.Set("token.issuer", "google")
+	// viper.Set("token.access", token.AccessToken)
+	// viper.Set("token.expiry", token.Expiry)
+	// viper.Set("token.refresh", token.RefreshToken)
+	// viper.Set("token.type", token.TokenType)
+	// viper.Set("token.identity", token.Extra("id_token").(string))
 
 	err = viper.WriteConfig()
 	if err != nil {
@@ -48,44 +60,129 @@ func authenticateGoogle() {
 	}
 }
 
-func configGoogle() *oauth2.Config {
-	return &oauth2.Config{
-		ClientID:     viper.GetString("google.clientID"),
-		ClientSecret: viper.GetString("google.clientSecret"),
-		RedirectURL:  fmt.Sprintf("http://localhost:%s", callbackPort),
-		Scopes:       []string{"https://www.googleapis.com/auth/userinfo.email"},
-		Endpoint:     google.Endpoint,
+func exchangeTokenGoogle(authResponse string, sessionID string) (string, error) {
+	apiKey := viper.GetString("google.apikey")
+
+	payload := []byte(
+		fmt.Sprintf(`{
+				"requestUri":"%s",
+				"postBody": "%s", 
+				"sessionId":"%s",
+				"returnRefreshToken": true, 
+				"returnSecureToken": true, 
+				"returnIdpCredential": true
+			}`, redirectURI, authResponse, sessionID),
+	)
+	payloadReader := bytes.NewReader(payload)
+
+	url := fmt.Sprintf("%s?key=%s", signInEndpointGoogle, apiKey)
+
+	req, err := http.NewRequest(http.MethodPost, url, payloadReader)
+	if err != nil {
+		return "", err
 	}
+
+	req.Header.Set("content-type", mimeTypeAPIGoogle)
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return "", err
+	}
+
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+
+	body := string(bodyBytes)
+
+	return body, nil
 }
 
-func codeViaTerminalGoogle(url string, codeChan chan string) {
-	fmt.Printf("Go to the following link: \n%v\n\n", url)
-	fmt.Printf("Paste back the code you received in this terminal: \n")
-	var authCode string
-	if _, err := fmt.Scan(&authCode); err != nil {
-		log.Fatalf("Unable to read authorization code %v", err)
+func getAuthUriGoogle() (string, string, error) {
+	apiKey := viper.GetString("google.apikey")
+
+	payload := []byte(
+		fmt.Sprintf(`{
+			"providerId":"%s",
+			"continueUri": "%s"
+		}`, providerIDGoogle, redirectURI),
+	)
+	payloadReader := bytes.NewReader(payload)
+
+	url := fmt.Sprintf("%s?key=%s", authURIEndpointGoogle, apiKey)
+
+	req, err := http.NewRequest(http.MethodPost, url, payloadReader)
+	if err != nil {
+		return "", "", err
 	}
-	codeChan <- authCode
+
+	req.Header.Set("content-type", mimeTypeAPIGoogle)
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return "", "", err
+	}
+
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", "", err
+	}
+
+	var data map[string]interface{}
+	err = json.Unmarshal(bodyBytes, &data)
+	if err != nil {
+		return "", "", err
+	}
+
+	authURI := data["authUri"].(string)
+	sessionID := data["sessionId"].(string)
+
+	return authURI, sessionID, nil
 }
 
-func codeViaCallbackGoogle(url string, codeChan chan string) {
+func codeViaCallbackGoogle(url string, authResponseChan chan string) {
 	server := &http.Server{Addr: fmt.Sprintf(":%s", callbackPort)}
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		code := r.URL.Query().Get("code")
-		if code != "" {
-			codeChan <- r.URL.Query().Get("code")
-			err := server.Shutdown(context.Background())
+		if r.Method == http.MethodGet {
+			// TODO this needs to return client side code to extract and forward the Hash URI #state as POST on the same handler
+			state := r.URL.Query().Get("state")
+			if state != "" {
+				authResponseChan <- state
+				w.WriteHeader(200)
+				w.Write([]byte("200 OK"))
+				return
+			}
+			// Garbage until here more or less?
+		}
+		if r.Method == http.MethodPost {
+			bodyBytes, err := io.ReadAll(r.Body)
 			if err != nil {
-				fail(err)
+				w.WriteHeader(400)
+				w.Write([]byte("400 BAD REQUEST"))
+				return
+			}
+			body := string(bodyBytes)
+			if body != "" {
+				authResponseChan <- body
+				w.WriteHeader(200)
+				w.Write([]byte("200 OK"))
+				return
 			}
 		}
+
+		w.WriteHeader(400)
+		w.Write([]byte("400 BAD REQUEST"))
 	})
 
-	err := openBrowser(url)
-	if err != nil {
-		fail(err)
-	}
+	go func() {
+		err := openBrowser(url)
+		if err != nil {
+			fail(err)
+		}
+	}()
+
 	server.ListenAndServe()
 }
 
