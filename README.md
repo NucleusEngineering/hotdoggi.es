@@ -29,13 +29,13 @@ Multiple contemporary patterns have been implemented in the applications design 
 
 The frontend of the application is using the JAM Stack (JavaScript, APIs and Markup) pattern. A React application in `app/`, is integrated by Cloud Build and its production-optimized build is rsync-ed to a Google Cloud Storage bucket which serves as an origin backend for Google Cloud External HTTPS Load Balancing. Additionally, the serving of these static assets is accelerated through Google Cloud CDN.
 
-![Build pipeline and CDN-accelerated serving of static frontend assets](diagrams/static_serving_new.png)
+![Build pipeline and CDN-accelerated serving of static frontend assets](diagrams/static_serving.png)
 
 ### JAM Stack: API Frontend
 
 The A in JAM Stack stands for APIs and implements the frontend access to dynamic data via a RESTful API surface. The API is defined as an OpenAPI/Swagger specification that is uploaded to Cloud Endpoints, where it defines the API and registers it within Google's Service Management API. The proxy then pulls that configuration from the control plane and acts as an API gateway to all requests.
 
-![RESTful API via ESPv2 proxy on Cloud Run with Cloud Endpoints control plane](diagrams/proxy_new.png)
+![RESTful API via ESPv2 proxy on Cloud Run with Cloud Endpoints control plane](diagrams/proxy.png)
 
 ### CQRS
 
@@ -45,17 +45,17 @@ Command Query Responsibility Segregation (CQRS) introduces the idea of distingui
 
 CQRS brings a number of architectural advantages. Operators can independently scale commands and queries. It's much easier to scale and optimize a read-heavy application if the query portion remains on a separate partition in the system. This can roughly be compared to using read-replicas to reduce read- contention in relational database systems. Additionally, caching of dynamic content becomes a bit easier.
 
-![Command Query Responsibility Segregation](diagrams/cqrs_new.png)
+![Command Query Responsibility Segregation](diagrams/cqrs.png)
 
 The segregation is enforced at the API layer. Resources known to the API continue to expose read-only methods, such as getting individual resources or listing multiple of a kind, just like they would in conventional RESTful design. The difference is that all state-mutating commands are all POSTed through a single `/events` endpoint, which is served by a generic ingestion service. This service accepts, inspects, validates and pushed event payloads downstream into the rest of the event-driven architecture, where the command will be processed at a later stage.
 
-![Flow of data through the system](diagrams/system_flow_new.png)
+![Flow of data through the system](diagrams/system_flow.png)
 
 ### Websockets
 
 Read-only queries can be seamlessly upgraded to streaming Websocket connections. The endpoints do not change and the methods are the same as for regular, short-lived HTTP requests. The client can simply initiate a Websocket connection upgrade by including the necessary HTTP headers. The API will then respond with an HTTP 101 status and signal that it's ready to upgrade to HTTP/2 for websocket streaming connections in which the server will continuously stream the same JSON-serialized objects for updated objects back to the client.
 
-![Websocket Upgrading](diagrams/websockets_new.png)
+![Websocket Upgrading](diagrams/websockets.png)
 
 ### Event-Sourcing and CloudEvents.io
 
@@ -65,7 +65,7 @@ Please note that a strictly event-sourced system is not always a great match for
 
 In this concrete demo application, the `ingest` service accepts raw event payloads that are being POSTed in though the API at '/events'. The service authenticates, validates and inserted the event into Firestore, which serves as the event-log. Certain properties, like precise timestamps, are inserted by Firestore. Once Firestore commits an insertion transaction, the database emits an event which is picked up by a Cloud Function. The `trigger` function pulls the newly created event from the database, deserializes it as a CloudEvent and publishes it onto Pub/Sub. Apart from model validation there is no distinction or differentiation between event types up until this point. All events are treated equally and end up on a single `$all` topic.
 
-![Event-sourcing flow](diagrams/event_sourcing_new.png)
+![Event-sourcing flow](diagrams/event_sourcing.png)
 
 The following shows a sample event as it would be emitted from one of the sources, e.g. the web application. It is the type of raw event that would be accepted if it were POSTed to /events/es.hotdoggi.events.dog_added/web with the intent of adding a new dog to the ones owned by the user.
 
@@ -130,7 +130,7 @@ The choreography patterns of free-floating self-organization is extremely helpfu
 
 The combination of push-subscriptions delivered into highly elastic, auto-scaled consuming services (like Cloud Run) is very effective as users don't need to worry about scaling message queues. Such an architecture is cost-effective at processing low rates of events and at the same time is capable for processing tens of thousands of events in seconds without any external operational adjustments.
 
-![Powerful event orchestration through a $all event stream on Pub/Sub with filtered push-subscriptions](diagrams/choreography_new.png)
+![Powerful event orchestration through a $all event stream on Pub/Sub with filtered push-subscriptions](diagrams/choreography.png)
 
 ### End-user & Service-to-Service Authentication 
 
@@ -142,7 +142,7 @@ All inbound requests are routed through the ESPv2 endpoint proxy which will insp
 
 The Cloud Run service running the proxy allows unauthenticated invocations, meaning that Cloud Run is not checking supplied credentials, but the running ESPv2 container will. The downstream services like `dogs` require authentication and Cloud Run will check authorization headers before passing inbound requests to the actual service code. This ensures strong service-to-service authentication and checks for authorization, too: Only the proxy's service account identity is allowed to directly invoke the downstream services. It can't be called directly from anywhere else/with any other identity, hence end-user authentication via the proxy is absolutely required.
 
-![End-User Authentication with Identity Platform and Encapsulated Tokens in Service-to-Service Communications](diagrams/authentication_new.png)
+![End-User Authentication with Identity Platform and Encapsulated Tokens in Service-to-Service Communications](diagrams/authentication.png)
 
 Additionally, services in hotdoggi.es will occasionally require communication with Google Cloud services and APIs. For example, the `dogs` service needs to query items in Firestore and each interaction with the APIs need to be authenticated in a similar fashion. Each service is using a non-standard service account which is given exact permissions to be able to it's job.
 
@@ -150,7 +150,7 @@ Additionally, services in hotdoggi.es will occasionally require communication wi
 
 The code execution within services of this demo is instrumented using OpenTelemetry. Each service records it's various code spans and prefixes them with a service identifier, before batch-exporting the recorded traces to Google Cloud Trace, where trace data is reconstructed and visualized for analysis.
 
-![Trace list graph as visualized by Cloud Trace](diagrams/tracing_new.png)
+![Trace list graph as visualized by Cloud Trace](diagrams/tracing.png)
 
 The context of traces is propagated across services boundaries, so that a single externally-invoked interaction results in a single trace object holding spans from all services that participated in processing that interaction.
 
