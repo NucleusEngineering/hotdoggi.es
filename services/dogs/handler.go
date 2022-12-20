@@ -27,7 +27,11 @@ import (
 	dogs "github.com/helloworlddan/hotdoggi.es/lib/dogs"
 )
 
-var upgrader = websocket.Upgrader{}
+var upgrader = websocket.Upgrader{
+	CheckOrigin: originChecker,
+}
+
+func originChecker(r *http.Request) bool { return true }
 
 // OptionsHandler for CORS preflights OPTIONS requests
 func OptionsHandler(c *gin.Context) {}
