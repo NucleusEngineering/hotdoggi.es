@@ -28,10 +28,9 @@ import (
 )
 
 var upgrader = websocket.Upgrader{
-	CheckOrigin: originChecker,
+	// Allow all origins
+	CheckOrigin: func(r *http.Request) bool { return true },
 }
-
-func originChecker(r *http.Request) bool { return true }
 
 // OptionsHandler for CORS preflights OPTIONS requests
 func OptionsHandler(c *gin.Context) {}
