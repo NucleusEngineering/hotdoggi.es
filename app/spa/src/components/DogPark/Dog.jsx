@@ -1,5 +1,5 @@
 export default function Dog(props) {
-  const { type, position } = { ...props };
+  const { type, location, name } = { ...props };
 
   return (
     <div
@@ -7,12 +7,12 @@ export default function Dog(props) {
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        gridColumn: position.y + 1, // css grids start from index 1 :(
-        gridRow: position.x + 1,
+        gridColumn: location.x + 1, // css grids start from index 1 :(
+        gridRow: location.y + 1,
       }}
     >
       <img height="75" width="75" src={`dogs/${type}.png`} />
-      <span>{`{x: ${position.x}, y: ${position.y}}`}</span>
+      <span>{name}</span>
     </div>
   );
 }

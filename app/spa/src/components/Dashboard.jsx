@@ -18,10 +18,8 @@ import { auth } from "../firebase";
 import DogPark from "./DogPark/DogPark";
 
 const Dashboard = () => {
-  const user = useContext(UserContext);
+  const user = useContext(UserContext).user;
   const { photoURL, displayName, email } = user;
-
-  console.log(user);
 
   return (
     <div>

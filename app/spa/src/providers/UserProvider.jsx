@@ -18,17 +18,23 @@ import { auth } from "../firebase";
 export const UserContext = createContext({ user: null });
 class UserProvider extends Component {
   state = {
-    user: null
+    user: null,
+    idToken: null
   };
 
   componentDidMount = () => {
-    auth.onAuthStateChanged(userAuth => {
+    auth.onAuthStateChanged(async userAuth => {
       this.setState({ user: userAuth});
+      if (userAuth) {
+        const idToken = await userAuth.getIdToken()
+        this.setState({ idToken });
+      }
     });
   };
+  
   render() {
     return (
-      <UserContext.Provider value={this.state.user}>
+      <UserContext.Provider value={this.state}>
         {this.props.children}
       </UserContext.Provider>
     );

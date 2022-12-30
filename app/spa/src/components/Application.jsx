@@ -21,7 +21,7 @@ import { UserContext } from "../providers/UserProvider";
 import PasswordReset from "./PasswordReset";
 
 function Application() {
-  const user = useContext(UserContext);
+  const user = useContext(UserContext).user;
   return (
         user ?
         <Dashboard />
