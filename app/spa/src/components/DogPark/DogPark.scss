@@ -113,8 +113,12 @@
 }
 
 .grid {
+  transition: opacity ease-in-out 0.25s;
   padding: 1.5rem;
   border-radius: 2px;
+  @media (max-width:960px) {
+    height: auto;
+  }
   height: 700px;
   display: grid;
   grid-template-columns: repeat(8, 1fr);

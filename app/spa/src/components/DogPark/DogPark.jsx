@@ -12,16 +12,23 @@ export default function DogPark() {
   useEffect(() => {
     async function fetchData() {
       if (idToken) {
-        const response = await fetch(
-          "https://api.hotdoggies.stamer.demo.altostrat.com/v1/dogs/",
-          {
-            headers: {
-              Authorization: `Bearer ${idToken}`,
-            },
+        try {
+          const response = await fetch(
+            "https://api.hotdoggies.stamer.demo.altostrat.com/v1/dogs/",
+            {
+              headers: {
+                Authorization: `Bearer ${idToken}`,
+              },
+            }
+          );
+          if (!response.ok) {
+            throw new Error(response.status);
           }
-        );
-        const dogsJson = await response.json();
-        setDogs(dogsJson);
+          const dogsJson = await response.json();
+          setDogs(dogsJson);
+        } catch (e) {
+          console.error(e);
+        }
       }
     }
 
@@ -30,29 +37,31 @@ export default function DogPark() {
         `wss://api.hotdoggies.stamer.demo.altostrat.com/v1/dogs/?access_token=${idToken}`
       );
       dogSocket.onmessage = (event) => {
-        let dogsState = [...dogs];
-        const parsedEventPayload = JSON.parse(event.data);
-        console.log(parsedEventPayload)
-        let dogToBeUpdated = dogsState.find(
-          (doggo) => doggo.id === parsedEventPayload.id
-        );
-        if (dogToBeUpdated) {
-          console.log("dog", dogToBeUpdated.dog);
-          dogToBeUpdated.dog.location.latitude =
-            parsedEventPayload.dog.location.latitude;
-          dogToBeUpdated.dog.location.longitude =
-            parsedEventPayload.dog.location.longitude;
-          setDogs(dogsState);
-        } else {
-          setDogs([...dogs, parsedEventPayload  ])
-        }
+        setDogs((dogs) => {
+          let dogsState = [...dogs];
+          const parsedEventPayload = JSON.parse(event.data);
+          console.log(parsedEventPayload);
+          let dogToBeUpdated = dogsState.find(
+            (doggo) => doggo.id === parsedEventPayload.id
+          );
+          if (dogToBeUpdated) {
+            dogToBeUpdated.dog.location.latitude =
+              parsedEventPayload.dog.location.latitude;
+            dogToBeUpdated.dog.location.longitude =
+              parsedEventPayload.dog.location.longitude;
+            return dogsState;
+          } else {
+            return [...dogs, parsedEventPayload];
+          }
+        });
       };
     }
 
     if (idToken) {
       fetchData();
-      startWebsocket()
+      startWebsocket();
     }
+
   }, [idToken]);
 
   return (

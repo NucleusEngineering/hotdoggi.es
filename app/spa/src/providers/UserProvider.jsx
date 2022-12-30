@@ -19,12 +19,13 @@ export const UserContext = createContext({ user: null });
 class UserProvider extends Component {
   state = {
     user: null,
-    idToken: null
+    idToken: null,
+    loading: true
   };
 
   componentDidMount = () => {
     auth.onAuthStateChanged(async userAuth => {
-      this.setState({ user: userAuth});
+      this.setState({ user: userAuth, loading: false});
       if (userAuth) {
         const idToken = await userAuth.getIdToken()
         this.setState({ idToken });

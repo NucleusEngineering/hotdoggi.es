@@ -11,7 +11,7 @@ export default function Dog(props) {
         gridRow: location.y + 1,
       }}
     >
-      <img height="75" width="75" src={`dogs/${type}.png`} />
+      <img height="75" width="75" src={`dogs/${type}.png`} alt={name} />
       <span>{name}</span>
     </div>
   );
