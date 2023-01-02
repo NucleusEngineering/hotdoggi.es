@@ -126,7 +126,7 @@ def simulateDogMovement(dog):
         if r.status_code != 201:
             print("error publishing event")
 
-        time.sleep(random.uniform(8.0, 12.0))
+        time.sleep(random.uniform(4.0, 8.0))
 
 
 def removeDog(dog):
@@ -190,7 +190,7 @@ def randomColor():
     return random.choice(colors)
 
 
-def abortHandler(signum, frame):
+def abortHandler(_, __):
     """ CTRL-C listener for graceful exits """
     print("\nCaught exit... Suspending movement simulation")
     global terminate
