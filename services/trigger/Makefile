@@ -35,6 +35,6 @@ run: init
 test: run clean
 
 update:
-	functions deploy ${PREFIX}-${SERVICE} --source=gsutil://${BUCKET}/function.zip --region=${REGION}
+	functions deploy ${PREFIX}-${SERVICE} --source=gs://${BUCKET}/function.zip --region=${REGION}
 
 .PHONY: build clean update test init run
