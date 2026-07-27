@@ -13,7 +13,7 @@
 # limitations under the License.
 
 init:
-	gsutil mb gs://hotdoggi-es-terraform-state/ || exit 0
+	gcloud storage buckets create gs://hotdoggi-es-terraform-state/ || exit 0
 	terraform init
 
 apply:

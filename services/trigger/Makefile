@@ -20,7 +20,7 @@ REGION := $(shell terraform -chdir=../../infrastructure output -json | jq -r '.r
 
 build: clean
 	zip -r function.zip *
-	gsutil cp function.zip gs://${BUCKET}
+	gcloud storage cp function.zip gs://${BUCKET}
 
 clean:
 	rm -rf vendor/ || exit 0

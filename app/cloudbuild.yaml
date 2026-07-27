@@ -24,4 +24,4 @@ steps:
   - 'pipefail'
   - '-c'
   - |-
-    gsutil rsync -d -r app/spa/build gs://$_BUCKET
+    gcloud storage rsync -d -r app/spa/build gs://$_BUCKET
